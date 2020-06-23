@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<!--
+	NOTES:
+	1. All tokens are represented by '$' sign in the template.
+	2. You can write your code only wherever mentioned.
+	3. All occurrences of existing tokens will be replaced by their appropriate values.
+	4. Blank lines will be removed automatically.
+	5. Remove unnecessary comments before creating your template.
+-->
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="authoring-tool" content="Adobe_Animate_CC">
+	<title>SPACE_WAR</title>
+	<!-- write your code here -->
+	<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+	<script src="SPACE_WAR.js?1592651286108"></script>
+	<link rel="stylesheet" href="./SPACE_WAR.css">
+	<script src="./ndgmr.Collision.js"></script>
+
+	<script>
+		var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+
+		function init() {
+			canvas = document.getElementById("canvas");
+			anim_container = document.getElementById("animation_container");
+			dom_overlay_container = document.getElementById("dom_overlay_container");
+			var comp = AdobeAn.getComposition("0356A0DF8E8F4448B3C6AC8B88E2FDE9");
+			var lib = comp.getLibrary();
+			var loader = new createjs.LoadQueue(false);
+			loader.addEventListener("fileload", function (evt) {
+				handleFileLoad(evt, comp)
+			});
+			loader.addEventListener("complete", function (evt) {
+				handleComplete(evt, comp)
+			});
+			var lib = comp.getLibrary();
+			loader.loadManifest(lib.properties.manifest);
+		}
+
+		function handleFileLoad(evt, comp) {
+			var images = comp.getImages();
+			if (evt && (evt.item.type == "image")) {
+				images[evt.item.id] = evt.result;
+			}
+		}
+
+		function handleComplete(evt, comp) {
+			//This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+			var lib = comp.getLibrary();
+			var ss = comp.getSpriteSheet();
+			var queue = evt.target;
+			var ssMetadata = lib.ssMetadata;
+			for (i = 0; i < ssMetadata.length; i++) {
+				ss[ssMetadata[i].name] = new createjs.SpriteSheet({
+					"images": [queue.getResult(ssMetadata[i].name)],
+					"frames": ssMetadata[i].frames
+				})
+			}
+			//設定判定是否開始
+			var is_start = false;
+			//判定是否死亡
+			var is_GAMEOVER = false;
+			//建立背景物件
+			exportRoot = new lib.SPACE_WAR();
+			stage = new lib.Stage(canvas);
+			//顯示背景
+			stage.addChild(exportRoot);
+			//建立飛船物件
+			var ship = new lib.sh();
+			//設定飛船初始位置
+			ship.x = 512;
+			ship.y = 660;
+			//螢幕上顯示飛船
+			exportRoot.addChild(ship);
+			//預設水平與垂直移動變數為0
+			var H = 0;
+			var V = 0;
+			//設定每次移動的距離
+			var D = 20;
+			//預設鍵盤按下布林值為否
+			var is_KD = false;
+			//預設分數變數為0分
+			var score = 0;
+			//預設血量100
+			var Hp = 100;
+
+			//for a1
+			//預設a1子彈數為0
+			var a1_num = 0;
+			//預設裝a1子彈的陣列
+			var a1_array = [0];
+			//產生a1子彈的Fn
+			var a1_generate = function () {
+				let a1 = new lib.a1();
+				return a1;
+			}
+
+			//for a2
+			//預設a2雷球數為0
+			var a2_num = 0;
+			//預設裝a2雷球的陣列
+			var a2_array = [0];
+			//產生a2雷球的Fn
+			var a2_generate = function () {
+				let a2 = new lib.a2();
+				return a2;
+			}
+
+			//for a4
+			//預設a4脈衝波數為0
+			var a4_num = 0;
+			//預設裝a4脈衝波的陣列
+			var a4_array = [0];
+			//產生a4脈衝波的Fn
+			var a4_generate = function () {
+				let a4 = new lib.a4();
+				return a4;
+			}
+
+			//for a6
+			//預設a6強化子彈數為0
+			var a6_num = 0;
+			//預設裝a6強化子彈的陣列
+			var a6_array = [0];
+			//產生a6強化子彈的Fn
+			var a6_generate = function () {
+				let a6 = new lib.a6();
+				return a6;
+			}
+
+			//for a7
+			//預設a7月牙天衝數為0
+			var a7_num = 0;
+			//預設裝a7月牙天衝的陣列
+			var a7_array = [0];
+			//產生a7月牙天衝的Fn
+			var a7_generate = function () {
+				let a7 = new lib.a7();
+				return a7;
+			}
+
+
+
+			const sounds = [{
+					src: "./音效/game_start.mp3",
+					id: "game_start"
+				},
+				{
+					src: "./音效/attack1.mp3",
+					id: "attack1"
+				},
+				{
+					src: "./音效/boom.mp3",
+					id: "boom"
+				},
+				{
+					src: "./音效/hit1.mp3",
+					id: "hit1"
+				},
+				{
+					src: "./音效/doong.mp3",
+					id: "doong"
+				},
+				{
+					src: "./音效/lazer.mp3",
+					id: "lazer"
+				},
+				{
+					src: "./音效/ping.mp3",
+					id: "ping"
+				},
+				{
+					src: "./音效/devil_scared1.mp3",
+					id: "devil_scared1"
+				},
+				{
+					src: "./音效/devil_scared2.mp3",
+					id: "devil_scared2"
+				},
+				{
+					src: "./音效/harmed.mp3",
+					id: "harmed"
+				},
+				{
+					src: "./音效/lightning.mp3",
+					id: "lightning"
+				},
+				{
+					src: "./音效/attack7.mp3",
+					id: "attack7"
+				},
+				{
+					src: "./音效/striking.mp3",
+					id: "striking"
+				},
+				{
+					src: "./音效/impact.mp3",
+					id: "impact"
+				},
+				{
+					src: "./音效/game_over.mp3",
+					id: "game_over"
+				},
+				{
+					src: "./音效/hp_up.mp3",
+					id: "hp_up"
+				},
+				{
+					src: "./音效/win.mp3",
+					id: "win"
+				},
+
+			];
+			createjs.Sound.alternateExtensions = ["mp3"];
+			createjs.Sound.registerSounds(sounds, "./");
+
+
+			//遊戲開始點擊按鈕
+			document.querySelector("#start").addEventListener("click", () => {
+				createjs.Sound.play("game_start");
+				is_start = true;
+				document.querySelector("#start").style.display = "none";
+				//設定鍵盤監聽事件
+				window.addEventListener("keydown", KDF)
+				window.addEventListener("keyup", KUF)
+				window.removeEventListener("keydown", start)
+			})
+			//遊戲開始空白建按鈕
+			window.addEventListener("keydown", start)
+
+			function start(e) {
+				if (e.keyCode === 32) {
+					is_start = true;
+					createjs.Sound.play("game_start");
+					document.querySelector("#start").style.display = "none";
+					//設定鍵盤監聽事件
+					window.addEventListener("keydown", KDF)
+					window.addEventListener("keyup", KUF)
+					window.removeEventListener("keydown", start)
+				}
+
+			}
+			//遊戲重新開始按鈕
+			document.querySelector("#restart").addEventListener("click", () => {
+				window.location.reload();
+			})
+
+
+			// // 怪物1
+			// let monster1 = setInterval(() => {
+
+			// 	if (score >= 0 && score <= 75) {
+			// 		if (is_start) {
+			// 			let m = new lib.m1();
+			// 			//(最大值-最小值+1)*亂數 +最小值
+			// 			m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 			m.y = -50;
+			// 			m.scaleX = 1.5;
+			// 			m.scaleY = 1.5;
+			// 			exportRoot.addChild(m);
+			// 			let HP = 1;
+			// 			let is_died = false;
+			// 			createjs.Tween.get(m)
+			// 				.to({
+			// 					y: 768,
+			// 				}, 15000)
+			// 				.call(() => {
+			// 					Hp -= HP;
+			// 					document.querySelector(".hp").style.width = `${Hp}%`;
+			// 					createjs.Tween.removeTweens(m);
+			// 					exportRoot.removeChild(m);
+			// 				})
+			// 				.addEventListener("change", () => {
+			// 					for (let i = 0; i <= a1_num; i++) {
+			// 						if (a1_array[i] == 0) {
+			// 							continue;
+			// 						} else {
+			// 							let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+			// 							if (hit_target) {
+			// 								HP -= 1;
+			// 								if (HP <= 0) {
+			// 									function del() {
+			// 										createjs.Tween.removeTweens(m);
+			// 										exportRoot.removeChild(m);
+			// 										score += 1;
+			// 										document.querySelector(".score").innerHTML = score;
+			// 									}
+			// 									if (is_died) {
+			// 										break;
+			// 									} else {
+			// 										is_died = true;
+			// 										createjs.Sound.play("boom");
+			// 										m.gotoAndPlay("boom");
+			// 										setTimeout(del, 100);
+			// 									}
+			// 								}
+			// 								createjs.Tween.removeTweens(a1_array[i]);
+			// 								exportRoot.removeChild(a1_array[i]);
+			// 								a1_array[i] = 0;
+
+			// 							}
+
+			// 						}
+
+
+
+			// 					}
+			// 					for (let i = 0; i <= a4_num; i++) {
+			// 						if (a4_array[i] == 0) {
+			// 							continue;
+			// 						} else {
+			// 							let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+			// 							if (hit_target) {
+			// 								HP -= 100;
+			// 								if (HP <= 0) {
+			// 									function del() {
+			// 										createjs.Tween.removeTweens(m);
+			// 										exportRoot.removeChild(m);
+			// 										score += 1;
+			// 										document.querySelector(".score").innerHTML = score;
+			// 									}
+			// 									if (is_died) {
+			// 										break;
+			// 									} else {
+			// 										is_died = true;
+			// 										createjs.Sound.play("boom");
+			// 										m.gotoAndPlay("boom");
+			// 										setTimeout(del, 100);
+			// 									}
+			// 								}
+
+
+			// 							}
+
+			// 						}
+
+
+
+			// 					}
+			// 					for (let i = 0; i <= a7_num; i++) {
+			// 						if (a7_array[i] == 0) {
+			// 							continue;
+			// 						} else {
+			// 							let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+			// 							if (hit_target) {
+			// 								HP -= 10;
+
+			// 								if (HP <= 0) {
+			// 									function del() {
+			// 										createjs.Tween.removeTweens(m);
+			// 										exportRoot.removeChild(m);
+			// 										score += 1;
+			// 										document.querySelector(".score").innerHTML = score;
+			// 									}
+			// 									if (is_died) {
+			// 										break;
+			// 									} else {
+			// 										is_died = true;
+			// 										createjs.Sound.play("boom");
+			// 										m.gotoAndPlay("boom");
+			// 										setTimeout(del, 100);
+			// 									}
+			// 								}
+
+
+			// 							}
+
+			// 						}
+
+
+
+			// 					}
+			// 					for (let i = 0; i <= a2_num; i++) {
+			// 						if (a2_array[i] == 0) {
+			// 							continue;
+			// 						} else {
+			// 							let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+			// 							if (hit_target) {
+			// 								HP -= 2;
+			// 								createjs.Tween.removeTweens(a2_array[i]);
+			// 								exportRoot.removeChild(a2_array[i]);
+			// 								a2_array[i] = 0;
+			// 								if (HP <= 0) {
+			// 									function del() {
+			// 										createjs.Tween.removeTweens(m);
+			// 										exportRoot.removeChild(m);
+			// 										score += 1;
+			// 										document.querySelector(".score").innerHTML = score;
+			// 									}
+			// 									if (is_died) {
+			// 										break;
+			// 									} else {
+			// 										is_died = true;
+			// 										createjs.Sound.play("boom");
+			// 										m.gotoAndPlay("boom");
+			// 										setTimeout(del, 100);
+			// 									}
+			// 								}
+			// 							}
+
+			// 						}
+
+
+
+			// 					}
+
+			// 					if (ndgmr.checkRectCollision(ship, m)) {
+			// 						if (is_died) {
+			// 							return
+			// 						} else {
+
+			// 							is_died = true;
+			// 							Hp -= HP;
+			// 							document.querySelector(".hp").style.width = `${Hp}%`;
+			// 							createjs.Sound.play("boom");
+			// 							m.gotoAndPlay("boom");
+			// 							ship.gotoAndPlay("hit");
+
+			// 							function del() {
+			// 								createjs.Tween.removeTweens(m);
+			// 								exportRoot.removeChild(m);
+			// 								ship.gotoAndPlay("stop");
+			// 							}
+			// 							setTimeout(del, 200);
+
+			// 						}
+			// 					}
+
+			// 					if (is_GAMEOVER) {
+			// 						createjs.Tween.removeTweens(m);
+			// 						exportRoot.removeChild(m);
+			// 						clearInterval(monster1);
+			// 					}
+			// 				})
+
+			// 		}
+			// 	}
+			// }, 1000)
+
+
+
+			// //怪物2
+
+			// let monster2 = setInterval(() => {
+			// 	if (score >= 25 && score <= 100) {
+			// 		let m = new lib.m2();
+			// 		//(最大值-最小值+1)*亂數 +最小值
+			// 		m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 		m.y = -100;
+			// 		exportRoot.addChild(m);
+			// 		let HP = 2;
+			// 		let is_died = false;
+			// 		createjs.Tween.get(m)
+			// 			.to({
+			// 				y: 768
+			// 			}, 25000)
+			// 			.call(() => {
+			// 				is_died = true;
+			// 				Hp -= HP;
+			// 				document.querySelector(".hp").style.width = `${Hp}%`;
+			// 				createjs.Tween.removeTweens(m);
+			// 				exportRoot.removeChild(m);
+
+			// 			})
+			// 			.addEventListener("change", () => {
+
+			// 				for (let i = 0; i <= a1_num; i++) {
+			// 					if (a1_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 1;
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("hit1");
+			// 							}
+			// 							if (HP == 1) {
+			// 								m.gotoAndPlay("run2");
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+			// 							createjs.Tween.removeTweens(a1_array[i]);
+			// 							exportRoot.removeChild(a1_array[i]);
+			// 							a1_array[i] = 0;
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a4_num; i++) {
+			// 					if (a4_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 100;
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+			// 				for (let i = 0; i <= a7_num; i++) {
+			// 					if (a7_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 100;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+			// 				for (let i = 0; i <= a2_num; i++) {
+			// 					if (a2_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 2;
+			// 							createjs.Tween.removeTweens(a2_array[i]);
+			// 							exportRoot.removeChild(a2_array[i]);
+			// 							a2_array[i] = 0;
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+
+			// 				if (ndgmr.checkRectCollision(ship, m)) {
+			// 					if (is_died) {
+			// 						return
+			// 					} else {
+			// 						is_died = true;
+			// 						Hp -= HP;
+			// 						document.querySelector(".hp").style.width = `${Hp}%`;
+			// 						createjs.Sound.play("boom");
+			// 						m.gotoAndPlay("boom");
+			// 						ship.gotoAndPlay("hit");
+
+			// 						function del() {
+			// 							createjs.Tween.removeTweens(m);
+			// 							exportRoot.removeChild(m);
+			// 							ship.gotoAndPlay("stop");
+			// 						}
+			// 						setTimeout(del, 200);
+			// 					}
+			// 				}
+			// 				if (is_GAMEOVER) {
+			// 					createjs.Tween.removeTweens(m);
+			// 					exportRoot.removeChild(m);
+			// 					clearInterval(monster2);
+			// 				}
+
+			// 			})
+
+
+			// 		setInterval(() => {
+			// 			ship.gotoAndPlay("stop");
+			// 			let left = 0;
+			// 			left = Math.random() >= 0.5 ? false : true;
+			// 			if (HP == 1) {
+			// 				if (!is_died) {
+			// 					let F1 = new lib.fi1;
+			// 					exportRoot.addChild(F1);
+			// 					F1.x = (m.x);
+			// 					F1.y = 0;
+
+			// 					createjs.Tween.get(F1)
+			// 						.to({
+			// 							y: 768,
+			// 						}, 5000)
+			// 						.call(() => {
+			// 							createjs.Tween.removeTweens(F1);
+			// 							exportRoot.removeChild(F1);
+			// 						})
+			// 						.addEventListener("change", () => {
+			// 							if (left) {
+			// 								F1.x -= 10;
+			// 							} else {
+			// 								F1.x += 10;
+			// 							}
+			// 							if (F1.x >= 1024) {
+			// 								left = true;
+			// 							}
+			// 							if (F1.x <= 0) {
+			// 								left = false;
+			// 							}
+
+			// 							let hit = ndgmr.checkRectCollision(ship, F1);
+			// 							if (hit) {
+			// 								Hp -= 1;
+			// 								document.querySelector(".hp").style.width =
+			// 									`${Hp}%`;
+			// 								createjs.Sound.play("harmed");
+			// 								ship.gotoAndPlay("hit");
+			// 								createjs.Tween.removeTweens(F1);
+			// 								exportRoot.removeChild(F1);
+			// 							}
+			// 							if (is_GAMEOVER) {
+			// 								createjs.Tween.removeTweens(F1);
+			// 								exportRoot.removeChild(F1);
+			// 							}
+			// 						})
+			// 				}
+
+			// 			}
+			// 		}, 800)
+
+			// 	}
+			// }, 2000)
+
+
+
+			// //怪物3
+
+			// let monster3 = setInterval(() => {
+
+			// 	if (score >= 75 && score <= 150) {
+			// 		let m = new lib.m3();
+			// 		//(最大值-最小值+1)*亂數 +最小值
+			// 		m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 		m.y = -100;
+			// 		exportRoot.addChild(m);
+			// 		let HP = 3;
+			// 		let is_died = false;
+			// 		createjs.Tween.get(m)
+			// 			.to({
+			// 				y: 768
+			// 			}, 25000)
+			// 			.call(() => {
+			// 				is_died = true;
+			// 				Hp -= HP;
+			// 				document.querySelector(".hp").style.width = `${Hp}%`;
+			// 				createjs.Tween.removeTweens(m);
+			// 				exportRoot.removeChild(m);
+
+			// 			})
+			// 			.addEventListener("change", () => {
+
+			// 				for (let i = 0; i <= a1_num; i++) {
+			// 					if (a1_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 1;
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("striking");
+
+			// 							}
+			// 							if (HP == 2) {
+			// 								m.gotoAndPlay("run3");
+			// 							}
+			// 							if (HP == 1) {
+			// 								m.gotoAndPlay("run2");
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+			// 							createjs.Tween.removeTweens(a1_array[i]);
+			// 							exportRoot.removeChild(a1_array[i]);
+			// 							a1_array[i] = 0;
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a4_num; i++) {
+			// 					if (a4_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 100;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a7_num; i++) {
+			// 					if (a7_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 10;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+			// 				for (let i = 0; i <= a2_num; i++) {
+			// 					if (a2_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+			// 						if (hit_target) {
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("striking");
+
+			// 							}
+			// 							HP -= 2;
+			// 							createjs.Tween.removeTweens(a2_array[i]);
+			// 							exportRoot.removeChild(a2_array[i]);
+			// 							a2_array[i] = 0;
+			// 							if (HP == 1) {
+			// 								m.gotoAndPlay("run2");
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+			// 				if (ndgmr.checkRectCollision(ship, m)) {
+			// 					if (is_died) {
+			// 						return
+			// 					} else {
+			// 						is_died = true;
+			// 						Hp -= HP;
+			// 						document.querySelector(".hp").style.width = `${Hp}%`;
+			// 						createjs.Sound.play("boom");
+			// 						ship.gotoAndPlay("hit");
+			// 						m.gotoAndPlay("boom");
+
+			// 						function del() {
+			// 							createjs.Tween.removeTweens(m);
+			// 							exportRoot.removeChild(m);
+			// 							ship.gotoAndPlay("stop");
+			// 						}
+			// 						setTimeout(del, 200);
+
+			// 					}
+			// 				}
+			// 				if (is_GAMEOVER) {
+			// 					createjs.Tween.removeTweens(m);
+			// 					exportRoot.removeChild(m);
+			// 					clearInterval(monster3);
+			// 				}
+
+			// 			})
+
+			// 		setInterval(() => {
+			// 			ship.gotoAndPlay("stop");
+			// 			if (HP <= 2) {
+			// 				if (!is_died) {
+			// 					let rot = 0;
+			// 					let T = 3000;
+			// 					if (HP <= 1) {
+			// 						rot = 360;
+			// 						T = 1500;
+			// 					}
+			// 					let a5 = new lib.a5;
+			// 					exportRoot.addChild(a5);
+			// 					a5.x = (m.x - 100);
+			// 					a5.y = 0;
+			// 					createjs.Tween.get(a5)
+			// 						.to({
+			// 							y: 768,
+			// 							x: ship.x,
+			// 							rotation: rot,
+			// 						}, T)
+			// 						.call(() => {
+			// 							createjs.Tween.removeTweens(a5);
+			// 							exportRoot.removeChild(a5);
+			// 						})
+			// 						.addEventListener("change", () => {
+			// 							let hit = ndgmr.checkRectCollision(ship, a5);
+			// 							if (hit) {
+			// 								Hp -= 1;
+			// 								document.querySelector(".hp").style.width = `${Hp}%`;
+			// 								createjs.Sound.play("harmed");
+			// 								ship.gotoAndPlay("hit");
+			// 								createjs.Tween.removeTweens(a5);
+			// 								exportRoot.removeChild(a5);
+			// 							}
+
+
+			// 							if (is_GAMEOVER) {
+			// 								createjs.Tween.removeTweens(a5);
+			// 								exportRoot.removeChild(a5);
+			// 							}
+
+
+			// 						})
+			// 				}
+
+			// 			}
+			// 		}, 1000)
+			// 	}
+
+			// }, 2500)
+
+
+
+
+			// //怪物4
+			// let monster4 = setInterval(() => {
+			// 	if (score >= 100 && score <= 175) {
+			// 		let m = new lib.m4();
+			// 		//(最大值-最小值+1)*亂數 +最小值
+			// 		m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 		m.y = -100;
+			// 		exportRoot.addChild(m);
+			// 		let HP = 6;
+			// 		let is_died = false;
+			// 		let xxx = Math.floor(Math.random() * (974 - 50 + 1) + 50)
+			// 		createjs.Tween.get(m)
+			// 			.to({
+			// 				y: 768,
+			// 				x: xxx
+			// 			}, 25000)
+			// 			.call(() => {
+			// 				is_died = true;
+			// 				Hp -= HP;
+			// 				document.querySelector(".hp").style.width = `${Hp}%`;
+			// 				createjs.Tween.removeTweens(m);
+			// 				exportRoot.removeChild(m);
+
+			// 			})
+			// 			.addEventListener("change", () => {
+			// 				for (let i = 0; i <= a1_num; i++) {
+			// 					if (a1_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 1;
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("ping");
+
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared1");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+			// 							createjs.Tween.removeTweens(a1_array[i]);
+			// 							exportRoot.removeChild(a1_array[i]);
+			// 							a1_array[i] = 0;
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a4_num; i++) {
+			// 					if (a4_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 100;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared1");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a7_num; i++) {
+			// 					if (a7_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 10;
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared1");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a2_num; i++) {
+			// 					if (a2_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+			// 						if (hit_target) {
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("ping");
+			// 							}
+			// 							HP -= 2;
+			// 							createjs.Tween.removeTweens(a2_array[i]);
+			// 							exportRoot.removeChild(a2_array[i]);
+			// 							a2_array[i] = 0;
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("boom");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+			// 				if (ndgmr.checkRectCollision(ship, m)) {
+			// 					if (is_died) {
+			// 						return
+			// 					} else {
+			// 						is_died = true;
+			// 						Hp -= HP;
+			// 						document.querySelector(".hp").style.width = `${Hp}%`;
+			// 						createjs.Sound.play("boom");
+			// 						ship.gotoAndPlay("hit");
+			// 						m.gotoAndPlay("boom");
+
+			// 						function del() {
+			// 							createjs.Tween.removeTweens(m);
+			// 							exportRoot.removeChild(m);
+			// 							ship.gotoAndPlay("stop");
+			// 						}
+			// 						setTimeout(del, 200);
+
+			// 					}
+			// 				}
+			// 				if (is_GAMEOVER) {
+			// 					createjs.Tween.removeTweens(m);
+			// 					exportRoot.removeChild(m);
+			// 					clearInterval(monster4);
+			// 				}
+			// 			})
+			// 		setInterval(() => {
+			// 			if (!is_died) {
+			// 				let R = new lib.ro;
+			// 				let is_hit = false;
+			// 				exportRoot.addChild(R);
+			// 				R.x = 1300;
+			// 				R.y = Math.floor(Math.random() * 769);
+			// 				createjs.Tween.get(R)
+			// 					.to({
+			// 						x: 0,
+			// 						y: 760,
+			// 					}, 3000)
+			// 					.call(() => {
+			// 						createjs.Tween.removeTweens(R);
+			// 						exportRoot.removeChild(R);
+			// 					})
+			// 					.addEventListener("change", () => {
+			// 						let hit = ndgmr.checkRectCollision(ship, R);
+			// 						if (hit) {
+			// 							if (is_hit) {
+			// 								return;
+			// 							} else {
+			// 								is_hit = true;
+			// 								Hp -= 2;
+			// 								document.querySelector(".hp").style.width = `${Hp}%`;
+			// 								createjs.Sound.play("impact");
+			// 								ship.gotoAndPlay("hit");
+
+			// 								function del() {
+			// 									ship.gotoAndPlay("stop");
+			// 								}
+			// 								setTimeout(del, 200);
+			// 							}
+			// 						}
+
+			// 						if (is_GAMEOVER) {
+			// 							createjs.Tween.removeTweens(R);
+			// 							exportRoot.removeChild(R);
+			// 						}
+
+
+			// 					})
+			// 			}
+
+
+			// 		}, Math.floor(Math.random() * 3000 + 1000))
+			// 	}
+			// }, 2000)
+
+			// //怪物5
+			// let monster5 = setInterval(() => {
+			// 	if (score >= 150 && score <= 225) {
+			// 		let m = new lib.m5();
+			// 		//(最大值-最小值+1)*亂數 +最小值
+			// 		m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 		m.y = 0;
+			// 		exportRoot.addChild(m);
+			// 		let HP = 10;
+			// 		let is_died = false;
+			// 		left = Math.random() >= 0.5 ? false : true;
+			// 		let dir = left;
+			// 		createjs.Tween.get(m)
+			// 			.to({
+			// 				y: 768,
+			// 			}, 15000)
+			// 			.call(() => {
+			// 				Hp -= HP;
+			// 				is_died = true;
+			// 				document.querySelector(".hp").style.width = `${Hp}%`;
+			// 				createjs.Tween.removeTweens(m);
+			// 				exportRoot.removeChild(m);
+			// 			})
+			// 			.addEventListener("change", () => {
+			// 				console.log(dir);
+			// 				if (dir) {
+			// 					m.x -= 10;
+			// 				} else {
+			// 					m.x += 10;
+			// 				}
+			// 				if (m.x >= 944) {
+			// 					dir = true;
+			// 				}
+			// 				if (m.x <= 0) {
+			// 					dir = false;
+			// 				}
+			// 				for (let i = 0; i <= a1_num; i++) {
+			// 					if (a1_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 1;
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("doong");
+			// 							}
+			// 							if (HP <= 8 && HP >= 1) {
+			// 								m.gotoAndPlay("run2");
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared2");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+			// 							createjs.Tween.removeTweens(a1_array[i]);
+			// 							exportRoot.removeChild(a1_array[i]);
+			// 							a1_array[i] = 0;
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a4_num; i++) {
+			// 					if (a4_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 100;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared2");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a7_num; i++) {
+			// 					if (a7_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+			// 						if (hit_target) {
+			// 							HP -= 10;
+
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared2");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+			// 				for (let i = 0; i <= a2_num; i++) {
+			// 					if (a2_array[i] == 0) {
+			// 						continue;
+			// 					} else {
+			// 						let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+			// 						if (hit_target) {
+			// 							if (HP >= 1) {
+			// 								createjs.Sound.play("doong");
+			// 							}
+			// 							HP -= 2;
+			// 							createjs.Tween.removeTweens(a2_array[i]);
+			// 							exportRoot.removeChild(a2_array[i]);
+			// 							a2_array[i] = 0;
+			// 							if (HP <= 8 && HP >= 1) {
+			// 								m.gotoAndPlay("run2");
+			// 							}
+			// 							if (HP <= 0) {
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(m);
+			// 									exportRoot.removeChild(m);
+			// 									score += 1;
+			// 									document.querySelector(".score").innerHTML = score;
+			// 								}
+			// 								if (is_died) {
+			// 									break;
+			// 								} else {
+			// 									is_died = true;
+			// 									createjs.Sound.play("devil_scared2");
+			// 									m.gotoAndPlay("boom");
+			// 									setTimeout(del, 100);
+			// 								}
+			// 							}
+
+			// 						}
+
+			// 					}
+
+
+
+			// 				}
+
+
+			// 				if (ndgmr.checkRectCollision(ship, m)) {
+			// 					if (is_died) {
+			// 						return
+			// 					} else {
+			// 						is_died = true;
+			// 						Hp -= HP;
+			// 						document.querySelector(".hp").style.width = `${Hp}%`;
+			// 						createjs.Sound.play("devil_scared2");
+			// 						ship.gotoAndPlay("hit");
+			// 						m.gotoAndPlay("boom");
+
+			// 						function del() {
+			// 							createjs.Tween.removeTweens(m);
+			// 							exportRoot.removeChild(m);
+			// 							ship.gotoAndPlay("stop");
+			// 						}
+			// 						setTimeout(del, 200);
+
+			// 					}
+			// 				}
+
+			// 				if (is_GAMEOVER) {
+			// 					createjs.Tween.removeTweens(m);
+			// 					exportRoot.removeChild(m);
+			// 					clearInterval(monster5);
+			// 				}
+			// 			})
+			// 		setInterval(() => {
+			// 			if (!is_died) {
+			// 				let F = new lib.fi2;
+			// 				let is_hit = false;
+			// 				exportRoot.addChild(F);
+			// 				F.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+			// 				F.y = 0;
+			// 				tmp = Math.floor(Math.random() * 769);
+			// 				createjs.Tween.get(F)
+			// 					.to({
+			// 						y: 768,
+			// 					}, 1500)
+			// 					.call(() => {
+			// 						createjs.Tween.removeTweens(F);
+			// 						exportRoot.removeChild(F);
+			// 					})
+			// 					.addEventListener("change", () => {
+			// 						if (F.y > tmp) {
+			// 							F.scaleX = 2;
+			// 							F.scaleY = 2;
+			// 						}
+
+			// 						let hit = ndgmr.checkRectCollision(ship, F);
+			// 						if (hit) {
+			// 							if (is_hit) {
+			// 								return;
+			// 							} else {
+			// 								is_hit = true;
+			// 								Hp -= 3;
+			// 								document.querySelector(".hp").style.width = `${Hp}%`;
+			// 								createjs.Sound.play("harmed");
+			// 								ship.gotoAndPlay("hit");
+
+			// 								function del() {
+			// 									createjs.Tween.removeTweens(F);
+			// 									exportRoot.removeChild(F);
+			// 									ship.gotoAndPlay("stop");
+			// 								}
+			// 								setTimeout(del, 200);
+			// 							}
+			// 						}
+
+			// 						if (is_GAMEOVER) {
+			// 							createjs.Tween.removeTweens(F);
+			// 							exportRoot.removeChild(F);
+			// 						}
+
+
+
+			// 					})
+			// 			}
+
+
+			// 		}, Math.floor(Math.random() * 2000 + 1500))
+
+
+
+			// 	}
+			// }, 3000)
+
+
+
+
+
+
+
+
+			//鍵盤按下
+			function KDF(e) {
+				//回傳鍵盤按鍵的keyCode
+				console.log(e.keyCode);
+				//鍵盤keyCode紀錄 37左 38上 39右 40下
+				//左右方向控制
+				if (e.keyCode === 37 || e.keyCode === 39) {
+					//執行一次後直接擋掉避免重複執行，影像一直重新loading
+					if (is_KD) return;
+					//控制is_KD
+					is_KD = true;
+					//移動方向控制
+					H = e.keyCode === 39 ? 1 : -1;
+					//移動時播放run狀態
+					ship.gotoAndPlay("run");
+
+				}
+				//上下方向控制
+				if (e.keyCode === 38 || e.keyCode === 40) {
+					//執行一次後直接擋掉避免重複執行，影像一直重新loading
+					if (is_KD) return;
+					//控制is_KD
+					is_KD = true;
+					//移動方向控制
+					V = e.keyCode === 38 ? -1 : 1;
+					//移動時播放run狀態
+					ship.gotoAndPlay("run");
+
+				}
+				//按空白鍵發射子彈
+				if (e.keyCode === 32) {
+					createjs.Sound.play("attack1")
+					//子彈個數加1
+					a1_num += 1;
+					//存一個區域變數值等於當時子彈個數
+					let tmp = a1_num;
+					//呼叫Fn a1_generate()產生子彈後存入a1_array內之當下a1_num值的位置
+					a1_array[tmp] = a1_generate();
+					//抓取當前飛船的相對位置
+					let ship_x = (ship.x + 12);
+					let ship_y = (ship.y - 23);
+					//設定子彈產生的位置
+					a1_array[tmp].x = ship_x;
+					a1_array[tmp].y = ship_y;
+					//螢幕上顯示子彈
+					exportRoot.addChild(a1_array[tmp]);
+					//利用CreateJS的TweenJS實現移動與動畫效果
+					createjs.Tween.get(a1_array[tmp])
+						//設定子彈物件產生後自動移動到y=-500位置(2.5秒內完成)，
+						.to({
+							y: -500
+						}, 2500)
+						//當達成to指令後消除物件與動畫   
+						.call(() => {
+							createjs.Tween.removeTweens(a1_array[tmp]);
+							exportRoot.removeChild(a1_array[tmp]);
+
+						})
+
+				}
+				//按Q發射雷球
+				if (e.keyCode === 81) {
+					createjs.Sound.play("lightning")
+					a2_num += 1;
+					let tmp = a2_num;
+					a2_array[tmp] = a2_generate();
+					let ship_x = (ship.x + 7);
+					let ship_y = (ship.y - 40);
+					a2_array[tmp].x = ship_x;
+					a2_array[tmp].y = ship_y;
+					a2_array[tmp].scaleX = 0.5;
+					a2_array[tmp].scaleY = 0.5;
+					exportRoot.addChild(a2_array[tmp]);
+					createjs.Tween.get(a2_array[tmp])
+						// 讓雷球轉360度(15秒內完成)
+						.to({
+							rotation: 180,
+						}, 15000)
+
+					createjs.Tween.get(a2_array[tmp])
+						.to({
+							y: -500
+						}, 10000)
+						.call(() => {
+							createjs.Tween.removeTweens(a2_array[tmp]);
+							exportRoot.removeChild(a2_array[tmp]);
+
+						})
+
+
+
+				}
+				//按W發射月牙天衝
+				if (e.keyCode === 87) {
+					createjs.Sound.play("attack7")
+					a7_num += 1;
+					let tmp = a7_num;
+					a7_array[tmp] = a7_generate();
+					let ship_x = (ship.x + 50);
+					let ship_y = (ship.y + 10);
+					a7_array[tmp].x = ship_x;
+					a7_array[tmp].y = ship_y;
+					exportRoot.addChild(a7_array[tmp]);
+					createjs.Tween.get(a7_array[tmp])
+						.to({
+							y: -500
+						}, 2500)
+						.call(() => {
+							createjs.Tween.removeTweens(a7_array[tmp]);
+							exportRoot.removeChild(a7_array[tmp]);
+
+						})
+
+						.addEventListener("change", () => {
+							if (a7_array[tmp].y <= -250) {
+								createjs.Tween.removeTweens(a7_array[tmp]);
+								exportRoot.removeChild(a7_array[tmp]);
+								a7_array[tmp] = 0;
+							}
+
+						})
+
+				}
+				//按E發射強化子彈
+				// if (e.keyCode === 69) {
+				// 	a6_num += 1;
+				// 	let tmp = a6_num;
+				// 	a6_array[tmp] = a6_generate();
+				// 	let ship_x = (ship.x + 45);
+				// 	let ship_y = (ship.y - 20);
+				// 	a6_array[tmp].x = ship_x;
+				// 	a6_array[tmp].y = ship_y;
+				// 	exportRoot.addChild(a6_array[tmp]);
+				// 	createjs.Tween.get(a6_array[tmp])
+				// 		.to({
+				// 			y: -500
+				// 		}, 2500)
+				// 		.call(() => {
+				// 			createjs.Tween.removeTweens(a6_array[tmp]);
+				// 			exportRoot.removeChild(a6_array[tmp]);
+
+				// 		})
+
+				// 		.addEventListener("change", () => {
+				// 			if (a6_array[tmp].y <= -250) {
+				// 				createjs.Tween.removeTweens(a6_array[tmp]);
+				// 				exportRoot.removeChild(a6_array[tmp]);
+				// 				a6_array[tmp] = 0;
+				// 			}
+
+				// 		})
+
+				// }
+				//按R發射脈衝波
+				if (e.keyCode === 82) {
+					createjs.Sound.play("lazer")
+					a4_num += 1;
+					let tmp = a4_num;
+					a4_array[tmp] = a4_generate();
+					let ship_y = (ship.y - 20);
+					a4_array[tmp].x = 0;
+					a4_array[tmp].y = ship_y;
+					exportRoot.addChild(a4_array[tmp]);
+					createjs.Tween.get(a4_array[tmp])
+						.to({
+							y: -500
+						}, 2500)
+						.call(() => {
+							createjs.Tween.removeTweens(a4_array[tmp]);
+							exportRoot.removeChild(a4_array[tmp]);
+
+						})
+
+						.addEventListener("change", () => {
+							if (a4_array[tmp].y <= -250) {
+								createjs.Tween.removeTweens(a4_array[tmp]);
+								exportRoot.removeChild(a4_array[tmp]);
+								a4_array[tmp] = 0;
+							}
+
+						})
+
+				}
+				if (e.keyCode === 83) {
+					createjs.Sound.play("hp_up");
+					Hp = 100;
+					document.querySelector(".hp").style.width = `${Hp}%`;
+				}
+
+			}
+			//鍵盤放開
+			function KUF(e) {
+				is_KD = false;
+				//停止移動時撥放stop狀態(飛船漂浮效果)
+				ship.gotoAndPlay("stop");
+				//將控制方向的值歸0
+				H = 0;
+				V = 0;
+
+			}
+			//設定監聽事件並執行Fn MOVE來達成ship移動
+			createjs.Ticker.addEventListener("tick", MOVE)
+
+			function MOVE() {
+
+				//左右移動
+				ship.x += D * H;
+				//上下移動
+				ship.y += D * V;
+
+			}
+
+
+			createjs.Ticker.addEventListener("tick", BOSS)
+
+			function BOSS() {
+				if (score == 0) {
+					score += 1
+					let boss = new lib.hht();
+					exportRoot.addChild(boss);
+					boss.x = 540;
+					boss.y = 100;
+
+					function b1() {
+						createjs.Tween.get(boss)
+							.to({
+								x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
+								y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
+							}, 1500)
+							.call(() => {
+								if (Math.random() > 0.75 ? true : false) {
+									b3()
+								} else {
+									b2()
+								}
+							})
+					}
+
+					function b2() {
+						createjs.Tween.get(boss)
+							.to({
+								x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
+								y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
+							}, 1500)
+							.call(() => {
+								b1()
+							})
+
+					}
+
+					function b3() {
+						createjs.Tween.get(boss)
+							.to({
+								x: ship.x,
+								y: ship.y
+							}, 100)
+							.call(() => {
+								b1()
+							})
+
+					}
+					b1()
+
+
+				}
+			}
+
+			createjs.Ticker.addEventListener("tick", GAMEOVER)
+
+			function GAMEOVER() {
+				if (Hp <= 0) {
+					is_GAMEOVER = true;
+					createjs.Sound.play("game_over");
+					document.querySelector("#game_over").style.display = "flex";
+					document.querySelector("#restart").style.display = "flex";
+					window.removeEventListener("keydown", KDF)
+					window.removeEventListener("keyup", KUF)
+					createjs.Ticker.removeEventListener("tick", MOVE)
+					createjs.Ticker.removeEventListener("tick", GAMEOVER)
+				}
+			}
+			//建立整個遊戲環境的監聽器
+			fnStartAnimation = function () {
+				createjs.Ticker.framerate = lib.properties.fps;
+				createjs.Ticker.addEventListener("tick", stage);
+			}
+			//支援螢幕縮放
+			AdobeAn.makeResponsive(false, 'both', false, 1, [canvas, anim_container, dom_overlay_container]);
+			AdobeAn
+				.compositionLoaded(lib.properties.id);
+			fnStartAnimation();
+		}
+	</script>
+	<!-- write your code here -->
+</head>
+
+<body onload="init();" style="margin:0px;">
+	<!-- 將遊戲畫面包在div.container內，預設置中 -->
+	<div class="container">
+		<!-- 利用h1.score顯示目前得分 -->
+		<h1 class="score">0</h1>
+		<div class="hpBar">
+			<h2 style="color: white;">HP</h2>
+			<div class="hpBox">
+				<div class="hp"></div>
+			</div>
+		</div>
+		<div id="start"><img src="./img/S__4276288.gif"></div>
+		<div id="game_over"><img src="./img/GAME_OVER.png"></div>
+		<div id="restart"><img src="./img/RESTART.png"></div>
+
+		<div id="animation_container" style="background-color:rgba(255, 255, 255, 1.00); width:1024px; height:768px">
+			<canvas id="canvas" width="1024" height="768"
+				style="position: absolute; display: block; background-color:rgba(255, 255, 255, 1.00);z-index: 1;"></canvas>
+			<div id="dom_overlay_container"
+				style="pointer-events:none; overflow:hidden; width:1024px; height:768px; position: absolute; left: 0px; top: 0px; display: block;">
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
