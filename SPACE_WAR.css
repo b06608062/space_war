@@ -1,0 +1,81 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+
+.container {
+    width: 1024px;
+    height: 768px;
+    position: relative;
+    margin: auto;
+}
+
+h1.score {
+    top: 10px;
+    left: 30px;
+    position: absolute;
+    font-size: 30px;
+    z-index: 10;
+    color: #fff;
+}
+
+.hpBar {
+    z-index: 10;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 160px;
+}
+
+.hpBar>h2 {
+    color: #000;
+    text-shadow: 1px 1px 0px #fff;
+    float: left;
+}
+
+.hpBox {
+    width: 100px;
+    height: 15px;
+    border: 4px solid #000;
+    float: right;
+    background-color: #fff;
+}
+
+.hpBox>.hp {
+    width: 100%;
+    height: 100%;
+    background-color: red;
+}
+
+
+#start {
+    position: absolute;
+    z-index: 10;
+    margin-left: calc((1024px - 427px) / 2);
+    margin-top: calc((768px - 320px) / 2);
+
+}
+
+#start:hover {
+    cursor: pointer;
+}
+
+#game_over {
+    position: absolute;
+    z-index: 10;
+    margin-left: calc((1024px - 680px) / 2);
+    margin-top: 10%;
+    display: none;
+
+
+}
+
+#restart {
+    position: absolute;
+    z-index: 10;
+    margin-left: calc((1024px - 512px) / 2);
+    margin-top: 40%;
+    display: none;
+    cursor: pointer;
+
+}
