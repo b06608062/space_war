@@ -79,3 +79,32 @@ h1.score {
     cursor: pointer;
 
 }
+
+#WIN_GAME {
+    position: absolute;
+    z-index: 10;
+    margin-left: calc((1024px - 512px) / 2);
+    margin-top: 20%;
+    display: none;
+}
+
+footer {
+    text-align: center;
+    color: #666;
+    padding-top: 30px;
+    font-size: 15px;
+}
+
+footer>h1 {
+    font-size: 15px;
+    text-align: center;
+    color: #666;
+}
+
+#Me {
+    text-decoration: none;
+}
+
+#Me:hover {
+    color: red;
+}
