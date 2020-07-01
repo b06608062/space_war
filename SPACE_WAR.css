@@ -22,23 +22,25 @@ h1.score {
 .hpBar {
     z-index: 10;
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 160px;
+    top: 1%;
+    right: 1%;
+    width: 15%;
 }
 
 .hpBar>h2 {
-    color: #000;
-    text-shadow: 1px 1px 0px #fff;
+    color: white;
     float: left;
+    margin-left: 1%;
 }
 
 .hpBox {
-    width: 100px;
-    height: 15px;
-    border: 4px solid #000;
-    float: right;
+    width: 70%;
+    height: 60%;
     background-color: #fff;
+    position: absolute;
+    right: 0%;
+    float: right;
+    top: 20%;
 }
 
 .hpBox>.hp {
@@ -47,6 +49,62 @@ h1.score {
     background-color: red;
 }
 
+.mpBar {
+    z-index: 10;
+    position: absolute;
+    top: 5%;
+    right: 1%;
+    width: 15%;
+}
+
+.mpBar>h2 {
+    color: white;
+    float: left;
+}
+
+.mpBox {
+    width: 70%;
+    height: 60%;
+    background-color: #fff;
+    position: absolute;
+    right: 0%;
+    float: right;
+    top: 20%;
+}
+
+.mpBox>.mp {
+    width: 100%;
+    height: 100%;
+    background-color: blue;
+}
+
+.boss_hpBar {
+    z-index: 10;
+    position: absolute;
+    top: 1%;
+    right: 1%;
+    width: 50%;
+    height: 5%;
+    left: 25%;
+    display: none;
+}
+
+
+
+.boss_hpBox {
+    width: 100%;
+    height: 60%;
+    background-color: #fff;
+    position: absolute;
+    float: right;
+    top: 20%;
+}
+
+.boss_hpBox>.boss_hp {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(14, 216, 14);
+}
 
 #start {
     position: absolute;
@@ -56,9 +114,7 @@ h1.score {
 
 }
 
-#start:hover {
-    cursor: pointer;
-}
+
 
 #game_over {
     position: absolute;
@@ -80,7 +136,7 @@ h1.score {
 
 }
 
-#WIN_GAME {
+#win_game {
     position: absolute;
     z-index: 10;
     margin-left: calc((1024px - 512px) / 2);
@@ -101,10 +157,10 @@ footer>h1 {
     color: #666;
 }
 
-#Me {
+#about_me {
     text-decoration: none;
 }
 
-#Me:hover {
+#about_me:hover {
     color: red;
 }
