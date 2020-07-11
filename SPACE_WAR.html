@@ -5,10 +5,13 @@
 	<meta charset="UTF-8">
 	<meta name="authoring-tool" content="Adobe_Animate_CC">
 	<title>SPACE_WAR</title>
+	<link rel="ICON" type="image/x-icon" href="./img/PLANET.png">
 	<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
 	<script src="SPACE_WAR.js?1592651286108"></script>
+
 	<!-- 引入css -->
 	<link rel="stylesheet" href="./SPACE_WAR.css">
+
 	<!-- 引入碰撞函數 -->
 	<script src="./ndgmr.Collision.js"></script>
 
@@ -50,42 +53,43 @@
 					"frames": ssMetadata[i].frames
 				})
 			}
-			//預設回滿血/藍次數為2
+
+			//預設回滿血/藍次數為2次
 			var bonus = 2;
-			//boss血量預設100
+			//預設boss血量100
 			var boss_HP = 100;
-			//音量大小預設0.6
+			//預設音量大小0.6
 			var set_volume = 0.6;
-			//判定是否暫停
+			//判斷遊戲是否暫停
 			var is_pause = false;
-			//判定是否勝利
+			//判斷遊戲是否勝利
 			var is_win = false;
-			//判定是否開始
+			//判斷遊戲是否開始
 			var is_start = false;
-			//判定是否失敗
+			//判斷遊戲是否失敗
 			var is_gameover = false;
-			//判定boss是否出現
+			//判斷boss是否出現
 			var boss_show = false;
 			//建立背景
 			exportRoot = new lib.SPACE_WAR();
 			stage = new lib.Stage(canvas);
-			//螢幕上顯示背景
+			//顯示背景
 			stage.addChild(exportRoot);
 			//建立飛船
 			var ship = new lib.sh();
 			//設定飛船初始位置
 			ship.x = 512;
 			ship.y = 660;
-			//螢幕上顯示飛船
+			//顯示飛船
 			exportRoot.addChild(ship);
-			//預設控制水平與垂直移動變數為0
+			//預設控制飛船水平與垂直移動變數值為0
 			var H = 0;
 			var V = 0;
-			//設定每次移動的距離
+			//預設飛船每次移動距離15
 			var D = 15;
-			//判定鍵盤是否按下
+			//判斷鍵盤是否按下
 			var is_KD = false;
-			//預設分數變數為0分
+			//預設分數為0分
 			var score = 0;
 			//預設血量100
 			var Hp = 100;
@@ -95,7 +99,7 @@
 			//for a1
 			//預設a1子彈數為0
 			var a1_num = 0;
-			//裝a1子彈的陣列
+			//儲存a1子彈的陣列
 			var a1_array = [0];
 			//產生a1子彈的function
 			var a1_generate = function () {
@@ -105,11 +109,10 @@
 				return a1;
 			}
 
-
 			//for a2
 			//預設a2雷球數為0
 			var a2_num = 0;
-			//裝a2雷球的陣列
+			//儲存a2雷球的陣列
 			var a2_array = [0];
 			//產生a2雷球的function
 			var a2_generate = function () {
@@ -117,11 +120,10 @@
 				return a2;
 			}
 
-
 			//for a4
 			//預設a4脈衝波數為0
 			var a4_num = 0;
-			//裝a4脈衝波的陣列
+			//儲存a4脈衝波的陣列
 			var a4_array = [0];
 			//產生a4脈衝波的function
 			var a4_generate = function () {
@@ -129,11 +131,10 @@
 				return a4;
 			}
 
-
 			//for a7
 			//預設a7月牙天衝數為0
 			var a7_num = 0;
-			//裝a7月牙天衝的陣列
+			//儲存a7月牙天衝的陣列
 			var a7_array = [0];
 			//產生a7月牙天衝的function
 			var a7_generate = function () {
@@ -141,7 +142,7 @@
 				return a7;
 			}
 
-			//抓取使用音效的位置同時給定id方便之後調用
+			//遊戲音效設定
 			const sounds = [{
 					src: "./音效/game_start.mp3",
 					id: "game_start"
@@ -216,15 +217,13 @@
 				},
 			];
 			createjs.Sound.alternateExtensions = ["mp3"];
+			// 註冊音效
 			createjs.Sound.registerSounds(sounds);
+			// 音效讀取進度
 			createjs.Sound.addEventListener("fileload", (e) => {
 				console.log(e.src);
 				console.log(e.id);
 			});
-
-
-
-
 
 			//啟動(遊戲開始)鍵盤事件監聽
 			window.addEventListener("keydown", start);
@@ -234,50 +233,58 @@
 				if (e.keyCode === 32) {
 					//遊戲提示
 					alert(
-						'每次遊戲僅有2次回滿血/藍的機會(按鍵S)\r特殊攻擊如:雷球(Q)、月牙天衝(W)、脈衝波(R)均會耗藍次數有限\r當分數達150分時boss出現且boss免疫所有特殊攻擊\r想辦法打倒boss獲得勝利，挑戰者們接受考驗吧!!!'
+						'每回僅有2次回滿血/藍的機會(按鍵S)\r特殊攻擊如:雷球(Q)、月牙天衝(W)、脈衝波(R)均會耗藍次數有限\r當遊戲分數達150分時boss出現且boss免疫所有特殊攻擊\r想辦法打倒boss獲得勝利，挑戰者們接受考驗吧!!!'
 					);
 					//遊戲開始為真
 					is_start = true;
 					//播放遊戲開始音效
 					createjs.Sound.play("game_start").volume = set_volume;
-					//將開始按鈕改為jquery版本
+					//jquery 版本
+					//刪除遊戲開始圖
 					$('#start').remove();
-					//物件導向版本如下
-					// document.querySelector("#start").style.display = "none";
-					//啟動鍵盤事件監聽
+					//DOM 版本
+					//document.querySelector("#start").style.display = "none";
+					//啟動鍵盤事件監聽(按下、放開)
 					window.addEventListener("keydown", KDF);
 					window.addEventListener("keyup", KUF);
-					//啟動定時更新遊戲事件變化
+					//啟動 Ticker 事件監聽(更新遊戲事件)
 					createjs.Ticker.addEventListener("tick", change);
 					//關掉(遊戲開始)鍵盤事件監聽
 					window.removeEventListener("keydown", start);
-					//刪除下方遊戲說明
+					//刪除下方遊戲說明圖
 					$("#intro").remove();
-					//啟動右側暫停按鈕功能
+					//啟動右側遊戲暫停按鈕功能
 					$('#pause').click(() => {
-						if (!is_pause) {
-							createjs.Sound.stop();
-							createjs.Ticker.paused = true;
-							is_pause = true;
-						} else {
-							createjs.Ticker.paused = false;
-							is_pause = false;
+						if (!is_gameover && !is_win) {
+							if (!is_pause) {
+								// 馬上關掉遊戲聲音
+								createjs.Sound.stop();
+								//遊戲暫停
+								createjs.Ticker.paused = true;
+								//遊戲暫停為真
+								is_pause = true;
+							} else {
+								createjs.Ticker.paused = false;
+								//遊戲暫停為否
+								is_pause = false;
+							}
 						}
 					})
 				}
-
 			}
 
-			//遊戲再玩一次按鈕
-			//改成jquery版本
+			//再玩一次按鈕
 			$('#restart').click(() => {
 				window.location.reload();
 			})
-			//物件導向版本如下
-			// document.querySelector("#restart").addEventListener("click", () => {
-			// 	window.location.reload()
+			//DOM 版本
+			//document.querySelector("#restart").addEventListener("click", () => {
+			//window.location.reload()
 			// })
-
+			//重新載入按鈕
+			$('#again').click(() => {
+				window.location.reload();
+			})
 
 			//音量控制
 			$('#volume').click(() => {
@@ -295,92 +302,89 @@
 					set_volume = 0.6;
 				}
 			})
-			//重新
-			$('#restart1').click(() => {
-				window.location.reload();
-			})
 
 
-			// 怪物1
-			//設定間隔時間執行生成monster1
+			//怪物1
+			//設定間隔時間執行function monster1
 			let monster1 = setInterval(() => {
-					//當分數條件滿足時執行
+					//當遊戲分數在條件範圍內時執行
 					if (score >= 0 && score <= 50) {
 						//當遊戲開始為真且非暫停時執行
 						if (is_start && !is_pause) {
-							//建立怪物1(物件導向)
+							//建立怪物1
 							let m = new lib.m1();
-							//設定初始位置
+							//設定怪物1初始位置
 							//(最大值-最小值+1)*亂數 +最小值
-							//x隨機(random放大後取高斯)
+							//怪物1初始x位置隨機(Math.random放大倍數後後取高斯)
 							m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-							//y為-50(屏幕後)
+							//預設怪物1初始y位置為-50(屏幕後)
 							m.y = -50;
 							//怪物1放大1.5倍
 							m.scaleX = 1.5;
 							m.scaleY = 1.5;
-							//螢幕上顯示怪物1
+							//顯示怪物1
 							exportRoot.addChild(m);
-							//設定怪物1初始血量為1滴血(區域變數)
+							//預設怪物1初始血量為1(區域變數)
 							let HP = 1;
-							//設定區域定數is_died判定怪物1是否死亡(決定此物件的生命週期)
+							//怪物1 is_died 為否(區域變數 決定怪物1的生命週期)
 							let is_died = false;
-							//用HTML5canvas動畫工具createjs輔助
-							//createjs.Tween.get(目標)控制怪物1的移動、表現、生命週期、觸發事件...
+							//使用 HTML5 canvas 動畫輔助工具 createjs 
+							//createjs.Tween.get(target)定義怪物1的行為、移動模式、生命週期、觸發事件...
 							createjs.Tween.get(m)
-								//設定怪物1由起點移動到指定位置(同時給定要達成秒數(毫秒))
+								//怪物1由起點移動到指定位置(同時給定達成秒數(毫秒))
 								.to({
 									y: 768,
 								}, 15000)
-								//設定當怪物1到達指定位置後要執行的指令
+								//當怪物1到達指定位置後要執行的指令
 								.call(() => {
+									//怪物1 is_died 為真
 									is_died = true;
-									//將怪物1剩餘血量扣在玩家當前血量身上
+									//將怪物1剩餘血量扣在玩家當前血量上
 									Hp -= HP;
-									//消除怪物1(物件與動畫)
+									//刪除怪物1(物件與動畫)
 									createjs.Tween.removeTweens(m);
 									exportRoot.removeChild(m);
 								})
-								//建立怪物1觸發事件監聽(當每次怪物位置變更時自動執行)
+								//啟動怪物1觸發事件監聽(每當怪物1位置變更時執行觸發事件監聽)
 								.addEventListener("change", () => {
-									//從a1_array抓取每個創立且儲存在陣列內的a1子彈
+									//a1_array陣列run一遍for迴圈
 									for (let i = 0; i <= (a1_array.length - 1); i++) {
-										//當陣列的i位置為空(0)時跳過這次，並繼續往下執行i+1
+										//當陣列的i位置為空(0)時跳過這次，並往下執行i+1
 										if (a1_array[i] == 0) {
 											continue;
 										} else {
-											//利用引入的第三方函式庫判定物件之間的碰撞
-											//判定a1子彈是否有與怪物1碰撞，回傳true或false(由區域變數hit_target接收)
+											//利用引入的第三方函式庫判斷物件之間碰撞與否
+											//判斷a1子彈是否與怪物1碰撞，回傳true或false布林值(由區域變數hit_target接收)
 											let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-											//當a1子彈與怪物1碰撞時執行
+											//當hit_target為真時執行
 											if (hit_target) {
 												//怪物1血量-1
 												HP -= 1;
 												//當怪物1血量小於0時執行
 												if (HP <= 0) {
-													//消除怪物1(物件與動畫)的del function
-													//等等在setTimeout時調用，目的是為了讓爆炸動畫播放完才執行消除(馬上執行消除怪物1會看不到爆炸動畫)
+													//在setTimeout時調用，目的是為了等爆炸動畫播放完才執行怪物1刪除指令(否則無法看到爆炸動畫)
 													function del() {
+														//刪除怪物1(物件與動畫)
 														createjs.Tween.removeTweens(m);
 														exportRoot.removeChild(m);
 													}
-													//當is_died為真時break(目的是因為setTimeout所以怪物1會延後消除(但怪物早已死)，此期間避免第二顆子彈與怪物1做重複碰撞判定造成分數累加等...)
+													//當is_died為真時break(因為setTimeout延遲刪除怪物1(但怪物早已死)，此期間避免二次碰撞判定)
 													if (is_died) {
 														break;
 													} else {
 														//遊戲分數+1
 														score += 1;
-														//怪物1死亡為真(is_died判定在這邊才轉為真，之後的碰撞會被視為無效碰撞)
+														//怪物1死亡為真(is_died在這邊轉為真，之後的碰撞會被視為無效碰撞)
 														is_died = true;
-														//播放怪物爆炸音效
+														//播放怪物1爆炸音效
 														createjs.Sound.play("boom").volume = set_volume;
-														//播放怪物爆炸動畫
+														//播放怪物1爆炸動畫
 														m.gotoAndPlay("boom");
 														//利用setTimeout延後執行del function
 														setTimeout(del, 100);
 													}
 												}
-												//消除a1子彈(物件與動畫)
+												//刪除a1子彈(物件與動畫)
 												createjs.Tween.removeTweens(a1_array[i]);
 												exportRoot.removeChild(a1_array[i]);
 												//將a1子彈陣列的第i個位置設為0(也就是與怪物1碰撞的那顆子彈)
@@ -472,14 +476,14 @@
 									//飛船與怪物1碰撞判定
 									if (ndgmr.checkRectCollision(ship, m)) {
 										if (is_died) {
-											return
+											return;
 										} else {
-											//飛船與怪物1碰撞後，將怪物1剩餘血量扣在玩家當前血量身上
+											//將怪物1剩餘血量扣在玩家當前血量上
 											Hp -= HP;
 											is_died = true;
 											createjs.Sound.play("boom").volume = set_volume;
 											m.gotoAndPlay("boom");
-											//播放飛船毀損動畫
+											//播放飛船毀損動畫(閃爍)
 											ship.gotoAndPlay("hit");
 
 											function del() {
@@ -491,7 +495,7 @@
 											setTimeout(del, 200);
 										}
 									}
-									//當玩家遊戲失敗或遊戲勝利時關掉setInterval同時清除所有物件
+									//當遊戲失敗或遊戲勝利時關掉setInterval monster1，同時刪除所有怪物
 									if (is_gameover || is_win) {
 										createjs.Tween.removeTweens(m);
 										exportRoot.removeChild(m);
@@ -502,8 +506,6 @@
 					}
 				},
 				1000)
-
-
 
 
 			//怪物2
@@ -643,7 +645,7 @@
 								}
 								if (ndgmr.checkRectCollision(ship, m)) {
 									if (is_died) {
-										return
+										return;
 									} else {
 										Hp -= HP;
 										is_died = true;
@@ -665,22 +667,24 @@
 									clearInterval(monster2);
 								}
 							})
-						//怪物2的火球攻擊
-						setInterval(() => {
-							//當pause時return不往下執行
+						//怪物2憤怒狀態發動火球攻擊
+						let atk = setInterval(() => {
+							//當pause時return
 							if (is_pause) {
 								return;
 							}
+							//當怪物2死亡時關掉setInterval atk
 							if (is_died) {
-								return
+								clearInterval(atk);
 							}
 							if (HP == 1) {
-								//隨機決定火球初始方向(左或右)
+								//決定火球初始方向左或右(隨機)
 								let left = Math.random() >= 0.5 ? false : true;
 								let f1 = new lib.fi1;
 								f1.x = (m.x);
 								f1.y = 0;
 								exportRoot.addChild(f1);
+								//is_hit為否(區域變數)
 								let is_hit = false;
 								createjs.Tween.get(f1)
 									.to({
@@ -691,10 +695,11 @@
 										exportRoot.removeChild(f1);
 									})
 									.addEventListener("change", () => {
+										//避免二次碰撞判定
 										if (is_hit) {
 											return;
 										}
-										//控制火球撞牆壁時反彈
+										//火球碰壁時反彈
 										if (left) {
 											f1.x -= 10;
 										} else {
@@ -708,6 +713,7 @@
 										}
 										let hit = ndgmr.checkRectCollision(ship, f1);
 										if (hit) {
+											//is_hit為真
 											is_hit = true;
 											//當火球擊中飛船時玩家血量-1
 											Hp -= 1;
@@ -733,8 +739,6 @@
 					}
 				}
 			}, 1500)
-
-
 
 
 			//怪物3
@@ -904,12 +908,12 @@
 									clearInterval(monster3);
 								}
 							})
-						setInterval(() => {
+						let atk = setInterval(() => {
 							if (is_pause) {
 								return;
 							}
 							if (is_died) {
-								return;
+								clearInterval(atk);
 							}
 							if (HP >= 1 && HP <= 2) {
 								let rot = 0;
@@ -961,8 +965,6 @@
 					}
 				}
 			}, 2000)
-
-
 
 
 			//怪物4
@@ -1100,7 +1102,7 @@
 								}
 								if (ndgmr.checkRectCollision(ship, m)) {
 									if (is_died) {
-										return
+										return;
 									} else {
 										is_died = true;
 										Hp -= HP;
@@ -1122,12 +1124,12 @@
 									clearInterval(monster4);
 								}
 							})
-						setInterval(() => {
+						let atk = setInterval(() => {
 							if (is_pause) {
 								return;
 							}
 							if (is_died) {
-								return;
+								clearInterval(atk);
 							}
 							let r = new lib.ro;
 							r.x = 1124;
@@ -1168,8 +1170,6 @@
 					}
 				}
 			}, 2000)
-
-
 
 
 			//怪物5
@@ -1319,7 +1319,7 @@
 								}
 								if (ndgmr.checkRectCollision(ship, m)) {
 									if (is_died) {
-										return
+										return;
 									} else {
 										is_died = true;
 										Hp -= HP;
@@ -1341,12 +1341,12 @@
 									clearInterval(monster5);
 								}
 							})
-						setInterval(() => {
+						let atk = setInterval(() => {
 							if (is_pause) {
 								return;
 							}
 							if (is_died) {
-								return;
+								clearInterval(atk);
 							}
 							let f2 = new lib.fi2;
 							f2.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
@@ -1394,16 +1394,17 @@
 				}
 			}, 2500)
 
+
+			//boss html
 			function html() {
+				//播放boos出場音效
 				createjs.Sound.play("boss").volume = set_volume;
 				let boss = new lib.hht();
-				boss.x = 540;
-				boss.y = 100;
+				boss.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+				boss.y = Math.floor(Math.random() * (450 - 50 + 1) + 50);
 				exportRoot.addChild(boss);
-				let is_died = false;
 				let is_hit = false;
-
-
+				//boss隨機模式
 				function b1() {
 					ship.gotoAndPlay("stop");
 					is_hit = false;
@@ -1449,6 +1450,7 @@
 						})
 				}
 
+				//boss緩衝模式
 				function b2() {
 					createjs.Tween.get(boss)
 						.to({
@@ -1488,6 +1490,7 @@
 						})
 				}
 
+				//boss攻擊模式
 				function b3() {
 					createjs.Tween.get(boss)
 						.to({
@@ -1510,9 +1513,13 @@
 							}
 						})
 				}
+
+				//呼叫 function b1
 				b1();
 			}
 
+
+			//保鑣 css
 			function css() {
 				let ccs = new lib.ccs();
 				ccs.x = 100;
@@ -1548,6 +1555,8 @@
 					})
 			}
 
+
+			//保鑣 js
 			function js() {
 				let jjs = new lib.jjs();
 				jjs.x = 924;
@@ -1582,40 +1591,42 @@
 					})
 			}
 
+
 			function boss() {
+				//顯示boss血條
 				$('.boss_hpBar').css("display", "flex");
+				//呼叫 function html css js
 				html();
 				css();
 				js();
 			}
 
 
-			//鍵盤按下事件
+			//鍵盤按下時執行function KDF
 			function KDF(e) {
-				//回傳按下鍵盤按鍵的keyCode
+				//回傳鍵盤按鍵的keyCode
 				console.log(e.keyCode);
-				//鍵盤keyCode紀錄 37左 38上 39右 40下
-				//左右方向控制
+				//鍵盤keyCode 37左 38上 39右 40下
 				if (!is_pause) {
+					//飛船水平移動方向控制
 					if (e.keyCode === 37 || e.keyCode === 39) {
-						//執行一次後直接return避免重複執行，影像一直重新loading
+						//按鍵按下期間只執行一次(避免飛船影像重複loading)
 						if (is_KD) return;
 						//鍵盤按下為真
 						is_KD = true;
-						//水平移動方向控制
+						//改變飛船水平移動變數值
 						H = e.keyCode === 39 ? 1 : -1;
 						//移動時飛船播放run狀態(噴火)
 						ship.gotoAndPlay("run");
 					}
-					//上下方向控制
+					//飛船垂直移動方向控制
 					if (e.keyCode === 38 || e.keyCode === 40) {
-						//執行一次後直接擋掉避免重複執行，影像一直重新loading
+						//按鍵按下期間只執行一次(避免飛船影像重複loading)
 						if (is_KD) return;
 						//鍵盤按下為真
 						is_KD = true;
-						//垂直移動方向控制
+						//改變飛船垂直移動變數值
 						V = e.keyCode === 38 ? -1 : 1;
-						//移動時飛船播放run狀態(噴火)
 						ship.gotoAndPlay("run");
 					}
 					//按空白鍵發射子彈
@@ -1623,31 +1634,28 @@
 						console.log("a1子彈數" + a1_num + "顆");
 						//播放a1子彈發射音效
 						createjs.Sound.play("attack1").volume = set_volume;
-						//存一個區域變數記錄a1子彈將存放位置
+						//記錄當前a1_num數值
 						let tmp = a1_num;
-						//a1子彈個數加1
+						//a1_num(a1子彈個數)+1
 						a1_num += 1;
-						//當累積a1子彈數等於100時a1子彈數歸零
+						//當a1_num大於100時歸零
 						if (a1_num > 100) {
 							a1_num = 0;
 						}
-						//呼叫function a1_generate()產生a1子彈後存入陣列a1_array之第tmp的位置
+						//呼叫function a1_generate 產生a1子彈後存入陣列a1_array[tmp]中
 						a1_array[tmp] = a1_generate();
-						//抓取當前飛船的位置
+						//取得當前飛船的位置
 						let ship_x = (ship.x + 12);
 						let ship_y = (ship.y - 23);
-						//設定a1子彈產生的位置
+						//設定a1子彈初始位置
 						a1_array[tmp].x = ship_x;
 						a1_array[tmp].y = ship_y;
-						//螢幕上顯示a1子彈
+						//顯示a1子彈
 						exportRoot.addChild(a1_array[tmp]);
-						//用HTML5canvas動畫工具createjs輔助
 						createjs.Tween.get(a1_array[tmp])
-							//設定a1子彈產生後由起始點移動到y=-500位置(2.5秒內完成)，
 							.to({
 								y: -100
 							}, 1500)
-							//設定當a1子彈到達指定位置後要執行的指令
 							.call(() => {
 								createjs.Tween.removeTweens(a1_array[tmp]);
 								exportRoot.removeChild(a1_array[tmp]);
@@ -1740,8 +1748,10 @@
 				}
 				//按S回滿血/藍
 				if (e.keyCode === 83 && bonus > 0) {
+					//bonus次數-1
 					bonus -= 1;
 					createjs.Sound.play("hp_up").volume = set_volume;
+					//Hp/Mp回復
 					Hp = 100;
 					Mp = 100;
 				}
@@ -1757,25 +1767,25 @@
 					}
 				}
 			}
-			//鍵盤放開事件
+			//鍵盤放開時執行function KUF
 			function KUF(e) {
 				if (e.keyCode === 37 || e.keyCode == 39) {
 					//鍵盤按下為否
 					is_KD = false;
 					//停止移動時飛船撥放stop狀態(飛船漂浮)
 					ship.gotoAndPlay("stop");
-					//將控制水平移動方向值歸0
+					//飛船水平移動變數值歸0
 					H = 0;
 				}
 				if (e.keyCode === 38 || e.keyCode == 40) {
 					is_KD = false;
 					ship.gotoAndPlay("stop");
-					//將控制垂直移動方向值歸0
+					//飛船垂直移動變數值歸0					
 					V = 0;
 				}
 			}
 
-			//遊戲事件變化
+			// Ticker 事件監聽(更新遊戲事件)
 			function change() {
 				//控制飛船移動同時限制飛船移動範圍
 				//左右移動
@@ -1789,48 +1799,50 @@
 				}
 				//上下移動
 				if (V == -1) {
+					//向上移動
 					ship.y += D * V;
 				}
 				if (V == 1 && ship.y <= 718) {
+					// 向上移動
 					ship.y += D * V;
 				}
-				//遊戲分數大於150分時飛船往前開出遊戲畫面直接勝利
+				//隱藏外掛
 				if (ship.y <= -100 && score >= 150) {
 					is_win = true;
 				}
-				//更新遊戲得分、血量、藍量
-				//改成jquery版本
+				//更新遊戲得分、血量、藍量、boss血量
+				//jquery版本
 				$('.score').text(score);
 				$('.hp').css("width", Hp + "%");
 				$('.mp').css("width", Mp + "%");
-				//更新boss血量
 				$('.boss_hp').css("width", boss_HP + "%");
-				//物件導向版本如下
+				//DOM 版本
 				// document.querySelector(".score").innerHTML = score;
 				// document.querySelector(".hp").style.width = `${Hp}%`;
 				// document.querySelector(".mp").style.width = `${Mp}%`;
+				//當玩家血量歸0遊戲失敗
 				if (Hp <= 0) {
 					//遊戲失敗為真
 					is_gameover = true;
 					//播放遊戲失敗音效
 					createjs.Sound.play("game_over").volume = set_volume;
-					//改成jquery版本
+					//jquery版本
 					$('#game_over').css("display", "flex");
 					$('#restart').css("display", "flex");
-					//物件導向版本如下
+					$('.boss_hpBar').remove();
+					//DOM 版本
 					// document.querySelector("#game_over").style.display = "flex";
 					// document.querySelector("#restart").style.display = "flex";
-					$('.boss_hpBar').remove();
 					//關掉鍵盤事件監聽
 					window.removeEventListener("keydown", KDF);
 					window.removeEventListener("keyup", KUF);
-					//關掉定時更新遊戲事件變化
+					//關掉 Ticker 事件監聽(停止更新遊戲事件)
 					createjs.Ticker.removeEventListener("tick", change);
-
+					//飛船爆炸
 					function boom() {
 						createjs.Sound.play("boom").volume = set_volume;
 						ship.gotoAndPlay("boom");
-
+						//刪除飛船
 						function del() {
 							createjs.Tween.removeTweens(ship);
 							exportRoot.removeChild(ship);
@@ -1839,19 +1851,20 @@
 					}
 					setTimeout(boom, 2500);
 				}
+				//遊戲勝利
 				if (is_win) {
 					createjs.Sound.play("win").volume = set_volume;
-					//改成jquery版本
+					//jquery版本
 					$('#win_game').css("display", "flex");
 					$('#restart').css("display", "flex");
-					//物件導向版本如下
+					$('.boss_hpBar').remove();
+					//DOM 版本
 					// document.querySelector("#win_game").style.display = "flex";
 					// document.querySelector("#restart").style.display = "flex";
-					$('.boss_hpBar').remove();
 					//關掉鍵盤事件監聽
 					window.removeEventListener("keydown", KDF);
 					window.removeEventListener("keyup", KUF);
-					//關掉定時更新遊戲事件變化
+					//關掉 Ticker 事件監聽(停止更新遊戲事件)
 					createjs.Ticker.removeEventListener("tick", change);
 					if (ship.y >= 0) {
 						ship.gotoAndPlay("run");
@@ -1874,6 +1887,7 @@
 					boss_show = true;
 					setTimeout(boss, 500);
 				}
+				//boss血條顏色變化
 				if (boss_HP >= 30 && boss_HP <= 70) {
 					$('.boss_hp').css("background-color", "yellow");
 				}
@@ -1882,15 +1896,12 @@
 				}
 			}
 
-
-
-
-
 			//遊戲畫面更新
 			fnStartAnimation = function () {
 				createjs.Ticker.framerate = lib.properties.fps;
 				createjs.Ticker.addEventListener("tick", stage);
 			}
+
 			//支援螢幕縮放
 			AdobeAn.makeResponsive(false, 'both', false, 1, [canvas, anim_container, dom_overlay_container]);
 			AdobeAn
@@ -1922,34 +1933,35 @@
 				<div class="mp"></div>
 			</div>
 		</div>
+		<!-- boss血條 -->
 		<div class="boss_hpBar">
 			<div class="boss_hpBox">
 				<div class="boss_hp"></div>
 			</div>
 		</div>
-		<!-- 音量 -->
+		<!-- 遊戲音量 -->
 		<div id="volume">
 			<img src="./img/S0.6.png" style="position: absolute; left: 100%;top: 2%;width: 8%;cursor: pointer;" id="V">
 		</div>
-		<!-- 重新 -->
-		<div id="restart1">
-			<img src="./img/RESTART1.png"
+		<!-- 重新載入 -->
+		<div id="again">
+			<img src="./img/AGAIN.png"
 				style="position: absolute; left: 120%;top: 2.5%;width: 6%;cursor: pointer;opacity: 0.8;">
 		</div>
-		<!-- 暫停 -->
+		<!-- 遊戲暫停 -->
 		<div id="pause">
 			<img src="./img/PAUSE.png"
 				style="position: absolute; left: 110%;top:2.5%;width: 6%;cursor: pointer;opacity: 0.8;" id="P">
 		</div>
-		<!-- 開始 -->
-		<div id="start"><img src="./img/S__4276288.gif"></div>
+		<!-- 遊戲開始 -->
+		<div id="start"><img src="./img/START.gif"></div>
 		<!-- 遊戲失敗 -->
 		<div id="game_over"><img src="./img/GAME_OVER.png"></div>
 		<!-- 再玩一次 -->
 		<div id="restart"><img src="./img/RESTART.png"></div>
 		<!-- 遊戲勝利 -->
 		<div id="win_game"><img src="./img/WIN_GAME.jpg"></div>
-		<!-- 遊戲版面 -->
+		<!-- canvas 遊戲畫布 -->
 		<div id="animation_container" style="background-color:rgba(255, 255, 255, 1.00); width:1024px; height:768px">
 			<canvas id="canvas" width="1024" height="768"
 				style="position: absolute; display: block; background-color:rgba(255, 255, 255, 1.00);z-index: 1;"></canvas>
@@ -1957,6 +1969,7 @@
 				style="pointer-events:none; overflow:hidden; width:1024px; height:768px; position: absolute; left: 0px; top: 0px; display: block;">
 			</div>
 		</div>
+		<!-- 遊戲說明 -->
 		<div id="intro">
 			<img src="./img/遊戲說明.jpg" style="width: 100%;">
 		</div>
