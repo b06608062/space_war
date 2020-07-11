@@ -1,5 +1,5 @@
 # space_war
-前置作業:遊戲開發網路課程
+前置作業:遊戲開發實作網路課程
 
 從閃光到動畫! HTML5 Canvas 動畫超入門
 
@@ -20,7 +20,7 @@ https://www.youtube.com/watch?v=sOHcx9jekzs&list=LLnZUgResjsna8ENPq4FetaA&index=
 
 遊戲製作:
 
-使用程式:
+程式語言:
 
 html、css、JavaScript、jQuery、Canvas(HTML5畫布元素)、第三方API(ndgmr.Collision.js用來判斷物件碰撞)、createjs(控制物件移動模式、音效輸出)
 
