@@ -27,14 +27,14 @@ html、css、JavaScript、jQuery、Canvas(HTML5 畫布元素)、第三方API(ndg
 
 Adobe Animate(動畫輔助工具)、Adobe Photoshop、Microsoft Word、Microsoft PowerPoint
 
-Online MP3 Cutter(https://mp3cut.net/tw/ 剪輯音檔)
+Online MP3 Cutter(https://mp3cut.net/tw/ mp3檔剪輯)
 
-YouTube to Mp3 Converter(https://ytmp3.cc/en13/ 將YouTube影片檔轉成音檔)
+YouTube to Mp3 Converter(https://ytmp3.cc/en13/ YouTube影片檔轉成mp3檔)
 
-MP3 Louder(https://www.mp3louder.com/zh/ 調整音檔音量)
+MP3 Louder(https://www.mp3louder.com/zh/ 調整mp3檔音量)
 
 遊戲素材:
-所有音檔、png檔、gif檔、jpg檔皆來自網路上的免費素材
+所有mp3檔、png檔、gif檔、jpg檔皆來自網路上的免費素材
 
 
 
