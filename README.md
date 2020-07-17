@@ -21,7 +21,7 @@ https://www.youtube.com/watch?v=sOHcx9jekzs&list=LLnZUgResjsna8ENPq4FetaA&index=
 
 程式語言:
 
-html、css、JavaScript、jQuery、Canvas(HTML5 畫布元素)、第三方API(ndgmr.Collision.js 物件碰撞判定)、createjs(動畫輔助工具、音效輸出)
+html、css、JavaScript、jQuery、Canvas( HTML5 畫布元素)、第三方 API ( ndgmr.Collision.js 物件碰撞判定)、createjs(動畫輔助工具、音效輸出)
 
 輔助工具:
 
@@ -35,12 +35,3 @@ MP3 Louder(https://www.mp3louder.com/zh/ 調整mp3檔音量)
 
 遊戲素材:
 所有mp3檔、png檔、gif檔、jpg檔皆來自網路上的免費素材
-
-
-
-
-
-
-
-
-
