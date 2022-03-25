@@ -21,6 +21,3 @@ html、css、JavaScript、jQuery、Canvas、ndgmr.Collision.js、createjs
 * [Online MP3 Cutter](https://mp3cut.net/tw/)
 * [YouTube to Mp3 Converter](https://ytmp3.cc/en13/)
 * [MP3 Louder](https://www.mp3louder.com/zh/)
-
-遊戲素材:
-所有mp3檔、png檔、gif檔、jpg檔皆來自網路上的免費素材
