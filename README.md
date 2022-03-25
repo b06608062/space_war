@@ -1,15 +1,8 @@
 # space_war
 ![This is an image](https://github.com/b06608062/space_war/blob/master/demo_image/%E6%88%AA%E5%9C%96%202022-03-25%20%E4%B8%8A%E5%8D%8811.52.46.png)
 ## Pre-Learning:
-
-從閃光到動畫! HTML5 Canvas 動畫超入門
-
-https://www.youtube.com/watch?v=weaPPCAZm0w&list=LLnZUgResjsna8ENPq4FetaA&index=10
-
-HTML5 Canvas 遊戲開發超入門
-
-https://www.youtube.com/watch?v=IHyBVK7tvhY&list=LLnZUgResjsna8ENPq4FetaA&index=12&t=0s
-
+* 從閃光到動畫! HTML5 Canvas 動畫超入門: [Link](https://www.youtube.com/watch?v=weaPPCAZm0w&list=LLnZUgResjsna8ENPq4FetaA&index=10)
+* HTML5 Canvas 遊戲開發超入門: [Link](https://www.youtube.com/watch?v=IHyBVK7tvhY&list=LLnZUgResjsna8ENPq4FetaA&index=12&t=0s)
 
 《HTML5 Canvas 遊戲開發超入門#2》 X 《THE F2E 2nd》
 
