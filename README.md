@@ -4,11 +4,15 @@
 ## Deploy
 Demo Link: [Link](https://b06608062.github.io/space_war/SPACE_WAR.html)
 
-## Pre-Learning:
+## Pre-Learning
 * [從閃光到動畫! HTML5 Canvas 動畫超入門](https://www.youtube.com/watch?v=weaPPCAZm0w&list=LLnZUgResjsna8ENPq4FetaA&index=10)
 * [HTML5 Canvas 遊戲開發超入門](https://www.youtube.com/watch?v=IHyBVK7tvhY&list=LLnZUgResjsna8ENPq4FetaA&index=12&t=0s)
 * [《HTML5 Canvas 遊戲開發超入門#2》 X 《THE F2E 2nd》](https://www.youtube.com/watch?v=iXL4IbShoCQ&list=LLnZUgResjsna8ENPq4FetaA&index=9)
 * [吳哲宇 x 六角學院 - 使用 Canvas 製作網頁遊戲](https://www.youtube.com/watch?v=sOHcx9jekzs&list=LLnZUgResjsna8ENPq4FetaA&index=4)
+
+## Framework and Package
+html、css、JavaScript、jQuery、Canvas、ndgmr.Collision.js、createjs
+
 
 程式語言:
 
