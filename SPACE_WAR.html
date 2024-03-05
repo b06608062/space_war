@@ -1,1987 +1,2136 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="authoring-tool" content="Adobe_Animate_CC" />
+    <title>SPACE_WAR</title>
+    <link rel="ICON" type="image/x-icon" href="./img/PLANET.png" />
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="SPACE_WAR.js?1592651286108"></script>
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="authoring-tool" content="Adobe_Animate_CC">
-	<title>SPACE_WAR</title>
-	<link rel="ICON" type="image/x-icon" href="./img/PLANET.png">
-	<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-	<script src="SPACE_WAR.js?1592651286108"></script>
+    <!-- 引入css -->
+    <link rel="stylesheet" href="./SPACE_WAR.css" />
 
-	<!-- 引入css -->
-	<link rel="stylesheet" href="./SPACE_WAR.css">
+    <!-- 引入碰撞函數 -->
+    <script src="./ndgmr.Collision.js"></script>
 
-	<!-- 引入碰撞函數 -->
-	<script src="./ndgmr.Collision.js"></script>
+    <script>
+      var canvas,
+        stage,
+        exportRoot,
+        anim_container,
+        dom_overlay_container,
+        fnStartAnimation;
 
-	<script>
-		var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+      function init() {
+        canvas = document.getElementById("canvas");
+        anim_container = document.getElementById("animation_container");
+        dom_overlay_container = document.getElementById(
+          "dom_overlay_container"
+        );
+        var comp = AdobeAn.getComposition("0356A0DF8E8F4448B3C6AC8B88E2FDE9");
+        var lib = comp.getLibrary();
+        var loader = new createjs.LoadQueue(false);
+        loader.addEventListener("fileload", function (evt) {
+          handleFileLoad(evt, comp);
+        });
+        loader.addEventListener("complete", function (evt) {
+          handleComplete(evt, comp);
+        });
+        var lib = comp.getLibrary();
+        loader.loadManifest(lib.properties.manifest);
+      }
 
-		function init() {
-			canvas = document.getElementById("canvas");
-			anim_container = document.getElementById("animation_container");
-			dom_overlay_container = document.getElementById("dom_overlay_container");
-			var comp = AdobeAn.getComposition("0356A0DF8E8F4448B3C6AC8B88E2FDE9");
-			var lib = comp.getLibrary();
-			var loader = new createjs.LoadQueue(false);
-			loader.addEventListener("fileload", function (evt) {
-				handleFileLoad(evt, comp)
-			});
-			loader.addEventListener("complete", function (evt) {
-				handleComplete(evt, comp)
-			});
-			var lib = comp.getLibrary();
-			loader.loadManifest(lib.properties.manifest);
-		}
+      function handleFileLoad(evt, comp) {
+        var images = comp.getImages();
+        if (evt && evt.item.type == "image") {
+          images[evt.item.id] = evt.result;
+        }
+      }
 
-		function handleFileLoad(evt, comp) {
-			var images = comp.getImages();
-			if (evt && (evt.item.type == "image")) {
-				images[evt.item.id] = evt.result;
-			}
-		}
+      function handleComplete(evt, comp) {
+        var lib = comp.getLibrary();
+        var ss = comp.getSpriteSheet();
+        var queue = evt.target;
+        var ssMetadata = lib.ssMetadata;
+        for (i = 0; i < ssMetadata.length; i++) {
+          ss[ssMetadata[i].name] = new createjs.SpriteSheet({
+            images: [queue.getResult(ssMetadata[i].name)],
+            frames: ssMetadata[i].frames,
+          });
+        }
 
-		function handleComplete(evt, comp) {
-			var lib = comp.getLibrary();
-			var ss = comp.getSpriteSheet();
-			var queue = evt.target;
-			var ssMetadata = lib.ssMetadata;
-			for (i = 0; i < ssMetadata.length; i++) {
-				ss[ssMetadata[i].name] = new createjs.SpriteSheet({
-					"images": [queue.getResult(ssMetadata[i].name)],
-					"frames": ssMetadata[i].frames
-				})
-			}
+        //預設回滿血/藍次數為2次
+        var bonus = 2;
+        //預設boss血量100
+        var boss_HP = 100;
+        //預設音量大小0.6
+        var set_volume = 0.6;
+        //判斷遊戲是否暫停
+        var is_pause = false;
+        //判斷遊戲是否勝利
+        var is_win = false;
+        //判斷遊戲是否開始
+        var is_start = false;
+        //判斷遊戲是否失敗
+        var is_gameover = false;
+        //判斷boss是否出現
+        var boss_show = false;
+        //建立背景
+        exportRoot = new lib.SPACE_WAR();
+        stage = new lib.Stage(canvas);
+        //顯示背景
+        stage.addChild(exportRoot);
+        //建立飛船
+        var ship = new lib.sh();
+        //設定飛船初始位置
+        ship.x = 512;
+        ship.y = 660;
+        //顯示飛船
+        exportRoot.addChild(ship);
+        //預設控制飛船水平與垂直移動變數值為0
+        var H = 0;
+        var V = 0;
+        //預設飛船每次移動距離15
+        var D = 15;
+        //判斷鍵盤是否按下
+        var is_KD = false;
+        //預設分數為0分
+        var score = 0;
+        //預設血量100
+        var Hp = 100;
+        //預設藍量100
+        var Mp = 100;
 
-			//預設回滿血/藍次數為2次
-			var bonus = 2;
-			//預設boss血量100
-			var boss_HP = 100;
-			//預設音量大小0.6
-			var set_volume = 0.6;
-			//判斷遊戲是否暫停
-			var is_pause = false;
-			//判斷遊戲是否勝利
-			var is_win = false;
-			//判斷遊戲是否開始
-			var is_start = false;
-			//判斷遊戲是否失敗
-			var is_gameover = false;
-			//判斷boss是否出現
-			var boss_show = false;
-			//建立背景
-			exportRoot = new lib.SPACE_WAR();
-			stage = new lib.Stage(canvas);
-			//顯示背景
-			stage.addChild(exportRoot);
-			//建立飛船
-			var ship = new lib.sh();
-			//設定飛船初始位置
-			ship.x = 512;
-			ship.y = 660;
-			//顯示飛船
-			exportRoot.addChild(ship);
-			//預設控制飛船水平與垂直移動變數值為0
-			var H = 0;
-			var V = 0;
-			//預設飛船每次移動距離15
-			var D = 15;
-			//判斷鍵盤是否按下
-			var is_KD = false;
-			//預設分數為0分
-			var score = 0;
-			//預設血量100
-			var Hp = 100;
-			//預設藍量100
-			var Mp = 100;
+        //for a1
+        //預設a1子彈數為0
+        var a1_num = 0;
+        //儲存a1子彈的陣列
+        var a1_array = [0];
+        //產生a1子彈的function
+        var a1_generate = function () {
+          //建立a1
+          let a1 = new lib.a1();
+          //回傳建立的物件a1
+          return a1;
+        };
 
-			//for a1
-			//預設a1子彈數為0
-			var a1_num = 0;
-			//儲存a1子彈的陣列
-			var a1_array = [0];
-			//產生a1子彈的function
-			var a1_generate = function () {
-				//建立a1
-				let a1 = new lib.a1();
-				//回傳建立的物件a1
-				return a1;
-			}
+        //for a2
+        //預設a2雷球數為0
+        var a2_num = 0;
+        //儲存a2雷球的陣列
+        var a2_array = [0];
+        //產生a2雷球的function
+        var a2_generate = function () {
+          let a2 = new lib.a2();
+          return a2;
+        };
 
-			//for a2
-			//預設a2雷球數為0
-			var a2_num = 0;
-			//儲存a2雷球的陣列
-			var a2_array = [0];
-			//產生a2雷球的function
-			var a2_generate = function () {
-				let a2 = new lib.a2();
-				return a2;
-			}
+        //for a4
+        //預設a4脈衝波數為0
+        var a4_num = 0;
+        //儲存a4脈衝波的陣列
+        var a4_array = [0];
+        //產生a4脈衝波的function
+        var a4_generate = function () {
+          let a4 = new lib.a4();
+          return a4;
+        };
 
-			//for a4
-			//預設a4脈衝波數為0
-			var a4_num = 0;
-			//儲存a4脈衝波的陣列
-			var a4_array = [0];
-			//產生a4脈衝波的function
-			var a4_generate = function () {
-				let a4 = new lib.a4();
-				return a4;
-			}
+        //for a7
+        //預設a7月牙天衝數為0
+        var a7_num = 0;
+        //儲存a7月牙天衝的陣列
+        var a7_array = [0];
+        //產生a7月牙天衝的function
+        var a7_generate = function () {
+          let a7 = new lib.a7();
+          return a7;
+        };
 
-			//for a7
-			//預設a7月牙天衝數為0
-			var a7_num = 0;
-			//儲存a7月牙天衝的陣列
-			var a7_array = [0];
-			//產生a7月牙天衝的function
-			var a7_generate = function () {
-				let a7 = new lib.a7();
-				return a7;
-			}
+        //遊戲音效設定
+        const sounds = [
+          {
+            src: "./音效/game_start.mp3",
+            id: "game_start",
+          },
+          {
+            src: "./音效/attack1.mp3",
+            id: "attack1",
+          },
+          {
+            src: "./音效/boom.mp3",
+            id: "boom",
+          },
+          {
+            src: "./音效/hit1.mp3",
+            id: "hit1",
+          },
+          {
+            src: "./音效/doong.mp3",
+            id: "doong",
+          },
+          {
+            src: "./音效/lazer.mp3",
+            id: "lazer",
+          },
+          {
+            src: "./音效/ping.mp3",
+            id: "ping",
+          },
+          {
+            src: "./音效/devil_scared1.mp3",
+            id: "devil_scared1",
+          },
+          {
+            src: "./音效/devil_scared2.mp3",
+            id: "devil_scared2",
+          },
+          {
+            src: "./音效/harmed.mp3",
+            id: "harmed",
+          },
+          {
+            src: "./音效/lightning.mp3",
+            id: "lightning",
+          },
+          {
+            src: "./音效/attack7.mp3",
+            id: "attack7",
+          },
+          {
+            src: "./音效/striking.mp3",
+            id: "striking",
+          },
+          {
+            src: "./音效/impact.mp3",
+            id: "impact",
+          },
+          {
+            src: "./音效/game_over.mp3",
+            id: "game_over",
+          },
+          {
+            src: "./音效/hp_up.mp3",
+            id: "hp_up",
+          },
+          {
+            src: "./音效/win.mp3",
+            id: "win",
+          },
+          {
+            src: "./音效/boss.mp3",
+            id: "boss",
+          },
+        ];
+        createjs.Sound.alternateExtensions = ["mp3"];
+        // 註冊音效
+        createjs.Sound.registerSounds(sounds);
+        // 音效讀取進度
+        createjs.Sound.addEventListener("fileload", (e) => {
+          console.log(e.src);
+          console.log(e.id);
+        });
 
-			//遊戲音效設定
-			const sounds = [{
-					src: "./音效/game_start.mp3",
-					id: "game_start"
-				},
-				{
-					src: "./音效/attack1.mp3",
-					id: "attack1"
-				},
-				{
-					src: "./音效/boom.mp3",
-					id: "boom"
-				},
-				{
-					src: "./音效/hit1.mp3",
-					id: "hit1"
-				},
-				{
-					src: "./音效/doong.mp3",
-					id: "doong"
-				},
-				{
-					src: "./音效/lazer.mp3",
-					id: "lazer"
-				},
-				{
-					src: "./音效/ping.mp3",
-					id: "ping"
-				},
-				{
-					src: "./音效/devil_scared1.mp3",
-					id: "devil_scared1"
-				},
-				{
-					src: "./音效/devil_scared2.mp3",
-					id: "devil_scared2"
-				},
-				{
-					src: "./音效/harmed.mp3",
-					id: "harmed"
-				},
-				{
-					src: "./音效/lightning.mp3",
-					id: "lightning"
-				},
-				{
-					src: "./音效/attack7.mp3",
-					id: "attack7"
-				},
-				{
-					src: "./音效/striking.mp3",
-					id: "striking"
-				},
-				{
-					src: "./音效/impact.mp3",
-					id: "impact"
-				},
-				{
-					src: "./音效/game_over.mp3",
-					id: "game_over"
-				},
-				{
-					src: "./音效/hp_up.mp3",
-					id: "hp_up"
-				},
-				{
-					src: "./音效/win.mp3",
-					id: "win"
-				},
-				{
-					src: "./音效/boss.mp3",
-					id: "boss"
-				},
-			];
-			createjs.Sound.alternateExtensions = ["mp3"];
-			// 註冊音效
-			createjs.Sound.registerSounds(sounds);
-			// 音效讀取進度
-			createjs.Sound.addEventListener("fileload", (e) => {
-				console.log(e.src);
-				console.log(e.id);
-			});
+        //啟動(遊戲開始)鍵盤事件監聽
+        window.addEventListener("keydown", start);
+        //遊戲開始function
+        function start(e) {
+          //按空白鍵開始遊戲
+          if (e.keyCode === 32) {
+            //遊戲提示
+            alert(
+              "每回僅有2次回滿血/藍的機會(按鍵S)\r特殊攻擊如:雷球(Q)、月牙天衝(W)、脈衝波(R)均會耗藍次數有限\r當遊戲分數達150分時boss出現且boss免疫所有特殊攻擊\r想辦法打倒boss獲得勝利，挑戰者們接受考驗吧!!!"
+            );
+            //遊戲開始為真
+            is_start = true;
+            //播放遊戲開始音效
+            createjs.Sound.play("game_start").volume = set_volume;
+            //jquery 版本
+            //刪除遊戲開始圖
+            $("#start").remove();
+            //DOM 版本
+            //document.querySelector("#start").style.display = "none";
+            //啟動鍵盤事件監聽(按下、放開)
+            window.addEventListener("keydown", KDF);
+            window.addEventListener("keyup", KUF);
+            //啟動 Ticker 事件監聽(更新遊戲事件)
+            createjs.Ticker.addEventListener("tick", change);
+            //關掉(遊戲開始)鍵盤事件監聽
+            window.removeEventListener("keydown", start);
+            //刪除下方遊戲說明圖
+            $("#intro").remove();
+            //啟動右側遊戲暫停按鈕功能
+            $("#pause").click(() => {
+              if (!is_gameover && !is_win) {
+                if (!is_pause) {
+                  // 馬上關掉遊戲聲音
+                  createjs.Sound.stop();
+                  //遊戲暫停
+                  createjs.Ticker.paused = true;
+                  //遊戲暫停為真
+                  is_pause = true;
+                } else {
+                  createjs.Ticker.paused = false;
+                  //遊戲暫停為否
+                  is_pause = false;
+                }
+              }
+            });
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.overflow = "hidden";
+          }
+        }
 
-			//啟動(遊戲開始)鍵盤事件監聽
-			window.addEventListener("keydown", start);
-			//遊戲開始function
-			function start(e) {
-				//按空白鍵開始遊戲
-				if (e.keyCode === 32) {
-					//遊戲提示
-					alert(
-						'每回僅有2次回滿血/藍的機會(按鍵S)\r特殊攻擊如:雷球(Q)、月牙天衝(W)、脈衝波(R)均會耗藍次數有限\r當遊戲分數達150分時boss出現且boss免疫所有特殊攻擊\r想辦法打倒boss獲得勝利，挑戰者們接受考驗吧!!!'
-					);
-					//遊戲開始為真
-					is_start = true;
-					//播放遊戲開始音效
-					createjs.Sound.play("game_start").volume = set_volume;
-					//jquery 版本
-					//刪除遊戲開始圖
-					$('#start').remove();
-					//DOM 版本
-					//document.querySelector("#start").style.display = "none";
-					//啟動鍵盤事件監聽(按下、放開)
-					window.addEventListener("keydown", KDF);
-					window.addEventListener("keyup", KUF);
-					//啟動 Ticker 事件監聽(更新遊戲事件)
-					createjs.Ticker.addEventListener("tick", change);
-					//關掉(遊戲開始)鍵盤事件監聽
-					window.removeEventListener("keydown", start);
-					//刪除下方遊戲說明圖
-					$("#intro").remove();
-					//啟動右側遊戲暫停按鈕功能
-					$('#pause').click(() => {
-						if (!is_gameover && !is_win) {
-							if (!is_pause) {
-								// 馬上關掉遊戲聲音
-								createjs.Sound.stop();
-								//遊戲暫停
-								createjs.Ticker.paused = true;
-								//遊戲暫停為真
-								is_pause = true;
-							} else {
-								createjs.Ticker.paused = false;
-								//遊戲暫停為否
-								is_pause = false;
-							}
-						}
-					})
-				}
-			}
+        //再玩一次按鈕
+        $("#restart").click(() => {
+          document.documentElement.style.overflow = "";
+          document.body.style.overflow = "";
+          window.location.reload();
+        });
+        //DOM 版本
+        //document.querySelector("#restart").addEventListener("click", () => {
+        //window.location.reload()
+        // })
+        //重新載入按鈕
+        $("#again").click(() => {
+          document.documentElement.style.overflow = "";
+          document.body.style.overflow = "";
+          window.location.reload();
+        });
 
-			//再玩一次按鈕
-			$('#restart').click(() => {
-				window.location.reload();
-			})
-			//DOM 版本
-			//document.querySelector("#restart").addEventListener("click", () => {
-			//window.location.reload()
-			// })
-			//重新載入按鈕
-			$('#again').click(() => {
-				window.location.reload();
-			})
+        //音量控制
+        $("#volume").click(() => {
+          if (set_volume == 0.6) {
+            $("#V")
+              .attr("src", "./img/S1.png")
+              .css("top", 2.25 + "%");
+            set_volume = 1;
+          } else if (set_volume == 1) {
+            $("#V")
+              .attr("src", "./img/S0.png")
+              .css("top", 1.9 + "%");
+            set_volume = 0;
+          } else if (set_volume == 0) {
+            $("#V")
+              .attr("src", "./img/S0.3.png")
+              .css("top", 1.9 + "%");
+            set_volume = 0.3;
+          } else if (set_volume == 0.3) {
+            $("#V")
+              .attr("src", "./img/S0.6.png")
+              .css("top", 2.0 + "%");
+            set_volume = 0.6;
+          }
+        });
 
-			//音量控制
-			$('#volume').click(() => {
-				if (set_volume == 0.6) {
-					$('#V').attr('src', "./img/S1.png").css("top", 2.25 + "%");
-					set_volume = 1;
-				} else if (set_volume == 1) {
-					$('#V').attr('src', "./img/S0.png").css("top", 1.9 + "%");
-					set_volume = 0;
-				} else if (set_volume == 0) {
-					$('#V').attr('src', "./img/S0.3.png").css("top", 1.9 + "%");
-					set_volume = 0.3;
-				} else if (set_volume == 0.3) {
-					$('#V').attr('src', "./img/S0.6.png").css("top", 2.0 + "%");
-					set_volume = 0.6;
-				}
-			})
+        //怪物1
+        //設定間隔時間執行function monster1
+        let monster1 = setInterval(() => {
+          //當遊戲分數在條件範圍內時執行
+          if (score >= 0 && score <= 50) {
+            //當遊戲開始為真且非暫停時執行
+            if (is_start && !is_pause) {
+              //建立怪物1
+              let m = new lib.m1();
+              //設定怪物1初始位置
+              //(最大值-最小值+1)*亂數 +最小值
+              //怪物1初始x位置隨機(Math.random放大倍數後後取高斯)
+              m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+              //預設怪物1初始y位置為-50(屏幕後)
+              m.y = -50;
+              //怪物1放大1.5倍
+              m.scaleX = 1.5;
+              m.scaleY = 1.5;
+              //顯示怪物1
+              exportRoot.addChild(m);
+              //預設怪物1初始血量為1(區域變數)
+              let HP = 1;
+              //怪物1 is_died 為否(區域變數 決定怪物1的生命週期)
+              let is_died = false;
+              //使用 HTML5 canvas 動畫輔助工具 createjs
+              //createjs.Tween.get(target)定義怪物1的行為、移動模式、生命週期、觸發事件...
+              createjs.Tween.get(m)
+                //怪物1由起點移動到指定位置(同時給定達成秒數(毫秒))
+                .to(
+                  {
+                    y: 768,
+                  },
+                  15000
+                )
+                //當怪物1到達指定位置後要執行的指令
+                .call(() => {
+                  //怪物1 is_died 為真
+                  is_died = true;
+                  //將怪物1剩餘血量扣在玩家當前血量上
+                  Hp -= HP;
+                  //刪除怪物1(物件與動畫)
+                  createjs.Tween.removeTweens(m);
+                  exportRoot.removeChild(m);
+                })
+                //啟動怪物1觸發事件監聽(每當怪物1位置變更時執行觸發事件監聽)
+                .addEventListener("change", () => {
+                  //a1_array陣列run一遍for迴圈
+                  for (let i = 0; i <= a1_array.length - 1; i++) {
+                    //當陣列的i位置為空(0)時跳過這次，並往下執行i+1
+                    if (a1_array[i] == 0) {
+                      continue;
+                    } else {
+                      //利用引入的第三方函式庫判斷物件之間碰撞與否
+                      //判斷a1子彈是否與怪物1碰撞，回傳true或false布林值(由區域變數hit_target接收)
+                      let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+                      //當hit_target為真時執行
+                      if (hit_target) {
+                        //怪物1血量-1
+                        HP -= 1;
+                        //當怪物1血量小於0時執行
+                        if (HP <= 0) {
+                          //在setTimeout時調用，目的是為了等爆炸動畫播放完才執行怪物1刪除指令(否則無法看到爆炸動畫)
+                          function del() {
+                            //刪除怪物1(物件與動畫)
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          //當is_died為真時break(因為setTimeout延遲刪除怪物1(但怪物早已死)，此期間避免二次碰撞判定)
+                          if (is_died) {
+                            break;
+                          } else {
+                            //遊戲分數+1
+                            score += 1;
+                            //怪物1死亡為真(is_died在這邊轉為真，之後的碰撞會被視為無效碰撞)
+                            is_died = true;
+                            //播放怪物1爆炸音效
+                            createjs.Sound.play("boom").volume = set_volume;
+                            //播放怪物1爆炸動畫
+                            m.gotoAndPlay("boom");
+                            //利用setTimeout延後執行del function
+                            setTimeout(del, 100);
+                          }
+                        }
+                        //刪除a1子彈(物件與動畫)
+                        createjs.Tween.removeTweens(a1_array[i]);
+                        exportRoot.removeChild(a1_array[i]);
+                        //將a1子彈陣列的第i個位置設為0(也就是與怪物1碰撞的那顆子彈)
+                        a1_array[i] = 0;
+                      }
+                    }
+                  }
+                  //脈衝波碰撞判定
+                  for (let i = 0; i <= a4_array.length - 1; i++) {
+                    if (a4_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  //月牙天衝碰撞判定
+                  for (let i = 0; i <= a7_array.length - 1; i++) {
+                    if (a7_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  //雷球碰撞判定
+                  for (let i = 0; i <= a2_array.length - 1; i++) {
+                    if (a2_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+                      if (hit_target) {
+                        HP -= 2;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a2_array[i]);
+                        exportRoot.removeChild(a2_array[i]);
+                        a2_array[i] = 0;
+                      }
+                    }
+                  }
+                  //飛船與怪物1碰撞判定
+                  if (ndgmr.checkRectCollision(ship, m)) {
+                    if (is_died) {
+                      return;
+                    } else {
+                      //將怪物1剩餘血量扣在玩家當前血量上
+                      Hp -= HP;
+                      is_died = true;
+                      createjs.Sound.play("boom").volume = set_volume;
+                      m.gotoAndPlay("boom");
+                      //播放飛船毀損動畫(閃爍)
+                      ship.gotoAndPlay("hit");
 
+                      function del() {
+                        createjs.Tween.removeTweens(m);
+                        exportRoot.removeChild(m);
+                        //延後0.2秒後恢復飛船靜止狀態動畫(漂浮)
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(del, 200);
+                    }
+                  }
+                  //當遊戲失敗或遊戲勝利時關掉setInterval monster1，同時刪除所有怪物
+                  if (is_gameover || is_win) {
+                    createjs.Tween.removeTweens(m);
+                    exportRoot.removeChild(m);
+                    clearInterval(monster1);
+                  }
+                });
+            }
+          }
+        }, 1000);
 
-			//怪物1
-			//設定間隔時間執行function monster1
-			let monster1 = setInterval(() => {
-					//當遊戲分數在條件範圍內時執行
-					if (score >= 0 && score <= 50) {
-						//當遊戲開始為真且非暫停時執行
-						if (is_start && !is_pause) {
-							//建立怪物1
-							let m = new lib.m1();
-							//設定怪物1初始位置
-							//(最大值-最小值+1)*亂數 +最小值
-							//怪物1初始x位置隨機(Math.random放大倍數後後取高斯)
-							m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-							//預設怪物1初始y位置為-50(屏幕後)
-							m.y = -50;
-							//怪物1放大1.5倍
-							m.scaleX = 1.5;
-							m.scaleY = 1.5;
-							//顯示怪物1
-							exportRoot.addChild(m);
-							//預設怪物1初始血量為1(區域變數)
-							let HP = 1;
-							//怪物1 is_died 為否(區域變數 決定怪物1的生命週期)
-							let is_died = false;
-							//使用 HTML5 canvas 動畫輔助工具 createjs 
-							//createjs.Tween.get(target)定義怪物1的行為、移動模式、生命週期、觸發事件...
-							createjs.Tween.get(m)
-								//怪物1由起點移動到指定位置(同時給定達成秒數(毫秒))
-								.to({
-									y: 768,
-								}, 15000)
-								//當怪物1到達指定位置後要執行的指令
-								.call(() => {
-									//怪物1 is_died 為真
-									is_died = true;
-									//將怪物1剩餘血量扣在玩家當前血量上
-									Hp -= HP;
-									//刪除怪物1(物件與動畫)
-									createjs.Tween.removeTweens(m);
-									exportRoot.removeChild(m);
-								})
-								//啟動怪物1觸發事件監聽(每當怪物1位置變更時執行觸發事件監聽)
-								.addEventListener("change", () => {
-									//a1_array陣列run一遍for迴圈
-									for (let i = 0; i <= (a1_array.length - 1); i++) {
-										//當陣列的i位置為空(0)時跳過這次，並往下執行i+1
-										if (a1_array[i] == 0) {
-											continue;
-										} else {
-											//利用引入的第三方函式庫判斷物件之間碰撞與否
-											//判斷a1子彈是否與怪物1碰撞，回傳true或false布林值(由區域變數hit_target接收)
-											let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-											//當hit_target為真時執行
-											if (hit_target) {
-												//怪物1血量-1
-												HP -= 1;
-												//當怪物1血量小於0時執行
-												if (HP <= 0) {
-													//在setTimeout時調用，目的是為了等爆炸動畫播放完才執行怪物1刪除指令(否則無法看到爆炸動畫)
-													function del() {
-														//刪除怪物1(物件與動畫)
-														createjs.Tween.removeTweens(m);
-														exportRoot.removeChild(m);
-													}
-													//當is_died為真時break(因為setTimeout延遲刪除怪物1(但怪物早已死)，此期間避免二次碰撞判定)
-													if (is_died) {
-														break;
-													} else {
-														//遊戲分數+1
-														score += 1;
-														//怪物1死亡為真(is_died在這邊轉為真，之後的碰撞會被視為無效碰撞)
-														is_died = true;
-														//播放怪物1爆炸音效
-														createjs.Sound.play("boom").volume = set_volume;
-														//播放怪物1爆炸動畫
-														m.gotoAndPlay("boom");
-														//利用setTimeout延後執行del function
-														setTimeout(del, 100);
-													}
-												}
-												//刪除a1子彈(物件與動畫)
-												createjs.Tween.removeTweens(a1_array[i]);
-												exportRoot.removeChild(a1_array[i]);
-												//將a1子彈陣列的第i個位置設為0(也就是與怪物1碰撞的那顆子彈)
-												a1_array[i] = 0;
-											}
-										}
-									}
-									//脈衝波碰撞判定
-									for (let i = 0; i <= (a4_array.length - 1); i++) {
-										if (a4_array[i] == 0) {
-											continue;
-										} else {
-											let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
-											if (hit_target) {
-												HP -= 100;
-												if (HP <= 0) {
-													function del() {
-														createjs.Tween.removeTweens(m);
-														exportRoot.removeChild(m);
-													}
-													if (is_died) {
-														break;
-													} else {
-														score += 1;
-														is_died = true;
-														createjs.Sound.play("boom").volume = set_volume;
-														m.gotoAndPlay("boom");
-														setTimeout(del, 100);
-													}
-												}
-											}
-										}
-									}
-									//月牙天衝碰撞判定
-									for (let i = 0; i <= (a7_array.length - 1); i++) {
-										if (a7_array[i] == 0) {
-											continue;
-										} else {
-											let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
-											if (hit_target) {
-												HP -= 100;
-												if (HP <= 0) {
-													function del() {
-														createjs.Tween.removeTweens(m);
-														exportRoot.removeChild(m);
-													}
-													if (is_died) {
-														break;
-													} else {
-														score += 1;
-														is_died = true;
-														createjs.Sound.play("boom").volume = set_volume;
-														m.gotoAndPlay("boom");
-														setTimeout(del, 100);
-													}
-												}
-											}
-										}
-									}
-									//雷球碰撞判定
-									for (let i = 0; i <= (a2_array.length - 1); i++) {
-										if (a2_array[i] == 0) {
-											continue;
-										} else {
-											let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
-											if (hit_target) {
-												HP -= 2;
-												if (HP <= 0) {
-													function del() {
-														createjs.Tween.removeTweens(m);
-														exportRoot.removeChild(m);
-													}
-													if (is_died) {
-														break;
-													} else {
-														score += 1;
-														is_died = true;
-														createjs.Sound.play("boom").volume = set_volume;
-														m.gotoAndPlay("boom");
-														setTimeout(del, 100);
-													}
-												}
-												createjs.Tween.removeTweens(a2_array[i]);
-												exportRoot.removeChild(a2_array[i]);
-												a2_array[i] = 0;
-											}
-										}
-									}
-									//飛船與怪物1碰撞判定
-									if (ndgmr.checkRectCollision(ship, m)) {
-										if (is_died) {
-											return;
-										} else {
-											//將怪物1剩餘血量扣在玩家當前血量上
-											Hp -= HP;
-											is_died = true;
-											createjs.Sound.play("boom").volume = set_volume;
-											m.gotoAndPlay("boom");
-											//播放飛船毀損動畫(閃爍)
-											ship.gotoAndPlay("hit");
+        //怪物2
+        let monster2 = setInterval(() => {
+          if (score >= 25 && score <= 75) {
+            if (is_start && !is_pause) {
+              let m = new lib.m2();
+              m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+              m.y = -100;
+              exportRoot.addChild(m);
+              let HP = 2;
+              let is_died = false;
+              createjs.Tween.get(m)
+                .to(
+                  {
+                    y: 768,
+                  },
+                  15000
+                )
+                .call(() => {
+                  is_died = true;
+                  Hp -= HP;
+                  createjs.Tween.removeTweens(m);
+                  exportRoot.removeChild(m);
+                })
+                .addEventListener("change", () => {
+                  for (let i = 0; i <= a1_array.length - 1; i++) {
+                    if (a1_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+                      if (hit_target) {
+                        HP -= 1;
+                        if (HP >= 1) {
+                          //播放怪物2專屬碰撞音校
+                          createjs.Sound.play("hit1").volume = set_volume;
+                        }
+                        if (HP == 1) {
+                          //播放怪物2憤怒動畫
+                          m.gotoAndPlay("run2");
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a1_array[i]);
+                        exportRoot.removeChild(a1_array[i]);
+                        a1_array[i] = 0;
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a4_array.length - 1; i++) {
+                    if (a4_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a7_array.length - 1; i++) {
+                    if (a7_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a2_array.length - 1; i++) {
+                    if (a2_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+                      if (hit_target) {
+                        HP -= 2;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a2_array[i]);
+                        exportRoot.removeChild(a2_array[i]);
+                        a2_array[i] = 0;
+                      }
+                    }
+                  }
+                  if (ndgmr.checkRectCollision(ship, m)) {
+                    if (is_died) {
+                      return;
+                    } else {
+                      Hp -= HP;
+                      is_died = true;
+                      createjs.Sound.play("boom").volume = set_volume;
+                      m.gotoAndPlay("boom");
+                      ship.gotoAndPlay("hit");
 
-											function del() {
-												createjs.Tween.removeTweens(m);
-												exportRoot.removeChild(m);
-												//延後0.2秒後恢復飛船靜止狀態動畫(漂浮)
-												ship.gotoAndPlay("stop");
-											}
-											setTimeout(del, 200);
-										}
-									}
-									//當遊戲失敗或遊戲勝利時關掉setInterval monster1，同時刪除所有怪物
-									if (is_gameover || is_win) {
-										createjs.Tween.removeTweens(m);
-										exportRoot.removeChild(m);
-										clearInterval(monster1);
-									}
-								})
-						}
-					}
-				},
-				1000)
+                      function del() {
+                        createjs.Tween.removeTweens(m);
+                        exportRoot.removeChild(m);
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(del, 200);
+                    }
+                  }
+                  if (is_gameover || is_win) {
+                    createjs.Tween.removeTweens(m);
+                    exportRoot.removeChild(m);
+                    clearInterval(monster2);
+                  }
+                });
+              //怪物2憤怒狀態發動火球攻擊
+              let atk = setInterval(() => {
+                //當pause時return
+                if (is_pause) {
+                  return;
+                }
+                //當怪物2死亡時關掉setInterval atk
+                if (is_died) {
+                  clearInterval(atk);
+                }
+                if (HP == 1) {
+                  //決定火球初始方向左或右(隨機)
+                  let left = Math.random() >= 0.5 ? false : true;
+                  let f1 = new lib.fi1();
+                  f1.x = m.x;
+                  f1.y = 0;
+                  exportRoot.addChild(f1);
+                  //is_hit為否(區域變數)
+                  let is_hit = false;
+                  createjs.Tween.get(f1)
+                    .to(
+                      {
+                        y: 768,
+                      },
+                      6000
+                    )
+                    .call(() => {
+                      createjs.Tween.removeTweens(f1);
+                      exportRoot.removeChild(f1);
+                    })
+                    .addEventListener("change", () => {
+                      //避免二次碰撞判定
+                      if (is_hit) {
+                        return;
+                      }
+                      //火球碰壁時反彈
+                      if (left) {
+                        f1.x -= 10;
+                      } else {
+                        f1.x += 10;
+                      }
+                      if (f1.x >= 1024) {
+                        left = true;
+                      }
+                      if (f1.x <= 0) {
+                        left = false;
+                      }
+                      let hit = ndgmr.checkRectCollision(ship, f1);
+                      if (hit) {
+                        //is_hit為真
+                        is_hit = true;
+                        //當火球擊中飛船時玩家血量-1
+                        Hp -= 1;
+                        //播放飛船受損音效
+                        createjs.Sound.play("harmed").volume = set_volume;
+                        //播放飛船毀損動畫
+                        ship.gotoAndPlay("hit");
+                        createjs.Tween.removeTweens(f1);
+                        exportRoot.removeChild(f1);
 
+                        function delay() {
+                          ship.gotoAndPlay("stop");
+                        }
+                        setTimeout(delay, 200);
+                      }
+                      if (is_gameover || is_win) {
+                        createjs.Tween.removeTweens(f1);
+                        exportRoot.removeChild(f1);
+                      }
+                    });
+                }
+              }, 1200);
+            }
+          }
+        }, 1500);
 
-			//怪物2
-			let monster2 = setInterval(() => {
-				if (score >= 25 && score <= 75) {
-					if (is_start && !is_pause) {
-						let m = new lib.m2();
-						m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-						m.y = -100;
-						exportRoot.addChild(m);
-						let HP = 2;
-						let is_died = false;
-						createjs.Tween.get(m)
-							.to({
-								y: 768
-							}, 15000)
-							.call(() => {
-								is_died = true;
-								Hp -= HP;
-								createjs.Tween.removeTweens(m);
-								exportRoot.removeChild(m);
-							})
-							.addEventListener("change", () => {
-								for (let i = 0; i <= (a1_array.length - 1); i++) {
-									if (a1_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-										if (hit_target) {
-											HP -= 1;
-											if (HP >= 1) {
-												//播放怪物2專屬碰撞音校
-												createjs.Sound.play("hit1").volume = set_volume;
-											}
-											if (HP == 1) {
-												//播放怪物2憤怒動畫
-												m.gotoAndPlay("run2");
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a1_array[i]);
-											exportRoot.removeChild(a1_array[i]);
-											a1_array[i] = 0;
-										}
-									}
-								}
-								for (let i = 0; i <= (a4_array.length - 1); i++) {
-									if (a4_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a7_array.length - 1); i++) {
-									if (a7_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a2_array.length - 1); i++) {
-									if (a2_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
-										if (hit_target) {
-											HP -= 2;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a2_array[i]);
-											exportRoot.removeChild(a2_array[i]);
-											a2_array[i] = 0;
-										}
-									}
-								}
-								if (ndgmr.checkRectCollision(ship, m)) {
-									if (is_died) {
-										return;
-									} else {
-										Hp -= HP;
-										is_died = true;
-										createjs.Sound.play("boom").volume = set_volume;
-										m.gotoAndPlay("boom");
-										ship.gotoAndPlay("hit");
+        //怪物3
+        let monster3 = setInterval(() => {
+          if (score >= 50 && score <= 100) {
+            if (is_start && !is_pause) {
+              let m = new lib.m3();
+              m.x = Math.floor(Math.random() * (874 - 150 + 1) + 150);
+              m.y = -100;
+              exportRoot.addChild(m);
+              let HP = 3;
+              let is_died = false;
+              createjs.Tween.get(m)
+                .to(
+                  {
+                    y: 768,
+                  },
+                  20000
+                )
+                .call(() => {
+                  is_died = true;
+                  Hp -= HP;
+                  createjs.Tween.removeTweens(m);
+                  exportRoot.removeChild(m);
+                })
+                .addEventListener("change", () => {
+                  for (let i = 0; i <= a1_array.length - 1; i++) {
+                    if (a1_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+                      if (hit_target) {
+                        HP -= 1;
+                        if (HP >= 1) {
+                          createjs.Sound.play("striking").volume = set_volume;
+                        }
+                        //兩種暴怒型態
+                        if (HP == 2) {
+                          m.gotoAndPlay("run3");
+                        }
+                        if (HP == 1) {
+                          m.gotoAndPlay("run2");
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a1_array[i]);
+                        exportRoot.removeChild(a1_array[i]);
+                        a1_array[i] = 0;
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a4_array.length - 1; i++) {
+                    if (a4_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a7_array.length - 1; i++) {
+                    if (a7_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a2_array.length - 1; i++) {
+                    if (a2_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+                      if (hit_target) {
+                        HP -= 2;
+                        if (HP >= 1) {
+                          createjs.Sound.play("striking").volume = set_volume;
+                        }
+                        if (HP == 1) {
+                          m.gotoAndPlay("run2");
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a2_array[i]);
+                        exportRoot.removeChild(a2_array[i]);
+                        a2_array[i] = 0;
+                      }
+                    }
+                  }
+                  if (ndgmr.checkRectCollision(ship, m)) {
+                    if (is_died) {
+                      return;
+                    } else {
+                      is_died = true;
+                      Hp -= HP;
+                      createjs.Sound.play("boom").volume = set_volume;
+                      m.gotoAndPlay("boom");
+                      ship.gotoAndPlay("hit");
 
-										function del() {
-											createjs.Tween.removeTweens(m);
-											exportRoot.removeChild(m);
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(del, 200);
-									}
-								}
-								if (is_gameover || is_win) {
-									createjs.Tween.removeTweens(m);
-									exportRoot.removeChild(m);
-									clearInterval(monster2);
-								}
-							})
-						//怪物2憤怒狀態發動火球攻擊
-						let atk = setInterval(() => {
-							//當pause時return
-							if (is_pause) {
-								return;
-							}
-							//當怪物2死亡時關掉setInterval atk
-							if (is_died) {
-								clearInterval(atk);
-							}
-							if (HP == 1) {
-								//決定火球初始方向左或右(隨機)
-								let left = Math.random() >= 0.5 ? false : true;
-								let f1 = new lib.fi1;
-								f1.x = (m.x);
-								f1.y = 0;
-								exportRoot.addChild(f1);
-								//is_hit為否(區域變數)
-								let is_hit = false;
-								createjs.Tween.get(f1)
-									.to({
-										y: 768,
-									}, 6000)
-									.call(() => {
-										createjs.Tween.removeTweens(f1);
-										exportRoot.removeChild(f1);
-									})
-									.addEventListener("change", () => {
-										//避免二次碰撞判定
-										if (is_hit) {
-											return;
-										}
-										//火球碰壁時反彈
-										if (left) {
-											f1.x -= 10;
-										} else {
-											f1.x += 10;
-										}
-										if (f1.x >= 1024) {
-											left = true;
-										}
-										if (f1.x <= 0) {
-											left = false;
-										}
-										let hit = ndgmr.checkRectCollision(ship, f1);
-										if (hit) {
-											//is_hit為真
-											is_hit = true;
-											//當火球擊中飛船時玩家血量-1
-											Hp -= 1;
-											//播放飛船受損音效
-											createjs.Sound.play("harmed").volume = set_volume;
-											//播放飛船毀損動畫
-											ship.gotoAndPlay("hit");
-											createjs.Tween.removeTweens(f1);
-											exportRoot.removeChild(f1);
+                      function del() {
+                        createjs.Tween.removeTweens(m);
+                        exportRoot.removeChild(m);
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(del, 200);
+                    }
+                  }
+                  if (is_gameover || is_win) {
+                    createjs.Tween.removeTweens(m);
+                    exportRoot.removeChild(m);
+                    clearInterval(monster3);
+                  }
+                });
+              let atk = setInterval(() => {
+                if (is_pause) {
+                  return;
+                }
+                if (is_died) {
+                  clearInterval(atk);
+                }
+                if (HP >= 1 && HP <= 2) {
+                  let rot = 0;
+                  let T = 2500;
+                  if (HP == 1) {
+                    rot = 360;
+                    T = 1500;
+                  }
+                  let a5 = new lib.a5();
+                  a5.x = m.x - 100;
+                  a5.y = 0;
+                  exportRoot.addChild(a5);
+                  let is_hit = false;
+                  createjs.Tween.get(a5)
+                    .to(
+                      {
+                        y: 768,
+                        x: ship.x,
+                        rotation: rot,
+                      },
+                      T
+                    )
+                    .call(() => {
+                      createjs.Tween.removeTweens(a5);
+                      exportRoot.removeChild(a5);
+                    })
+                    .addEventListener("change", () => {
+                      if (is_hit) {
+                        return;
+                      }
+                      let hit = ndgmr.checkRectCollision(ship, a5);
+                      if (hit) {
+                        is_hit = true;
+                        Hp -= 2;
+                        createjs.Sound.play("harmed").volume = set_volume;
+                        ship.gotoAndPlay("hit");
+                        createjs.Tween.removeTweens(a5);
+                        exportRoot.removeChild(a5);
 
-											function delay() {
-												ship.gotoAndPlay("stop");
-											}
-											setTimeout(delay, 200);
-										}
-										if (is_gameover || is_win) {
-											createjs.Tween.removeTweens(f1);
-											exportRoot.removeChild(f1);
-										}
-									})
-							}
-						}, 1200)
-					}
-				}
-			}, 1500)
+                        function delay() {
+                          ship.gotoAndPlay("stop");
+                        }
+                        setTimeout(delay, 200);
+                      }
+                      if (is_gameover || is_win) {
+                        createjs.Tween.removeTweens(a5);
+                        exportRoot.removeChild(a5);
+                      }
+                    });
+                }
+              }, 1000);
+            }
+          }
+        }, 2000);
 
+        //怪物4
+        let monster4 = setInterval(() => {
+          if (score >= 75 && score <= 125) {
+            if (is_start && !is_pause) {
+              let m = new lib.m4();
+              m.x = Math.floor(Math.random() * (874 - 150 + 1) + 150);
+              m.y = -100;
+              exportRoot.addChild(m);
+              let HP = 6;
+              let is_died = false;
+              createjs.Tween.get(m)
+                .to(
+                  {
+                    y: 768,
+                  },
+                  20000
+                )
+                .call(() => {
+                  is_died = true;
+                  Hp -= HP;
+                  createjs.Tween.removeTweens(m);
+                  exportRoot.removeChild(m);
+                })
+                .addEventListener("change", () => {
+                  for (let i = 0; i <= a1_array.length - 1; i++) {
+                    if (a1_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+                      if (hit_target) {
+                        HP -= 1;
+                        if (HP >= 1) {
+                          createjs.Sound.play("ping").volume = set_volume;
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared1").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a1_array[i]);
+                        exportRoot.removeChild(a1_array[i]);
+                        a1_array[i] = 0;
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a4_array.length - 1; i++) {
+                    if (a4_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared1").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a7_array.length - 1; i++) {
+                    if (a7_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared1").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a2_array.length - 1; i++) {
+                    if (a2_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+                      if (hit_target) {
+                        HP -= 2;
+                        if (HP >= 1) {
+                          createjs.Sound.play("ping").volume = set_volume;
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("boom").volume = set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a2_array[i]);
+                        exportRoot.removeChild(a2_array[i]);
+                        a2_array[i] = 0;
+                      }
+                    }
+                  }
+                  if (ndgmr.checkRectCollision(ship, m)) {
+                    if (is_died) {
+                      return;
+                    } else {
+                      is_died = true;
+                      Hp -= HP;
+                      createjs.Sound.play("boom").volume = set_volume;
+                      m.gotoAndPlay("boom");
+                      ship.gotoAndPlay("hit");
 
-			//怪物3
-			let monster3 = setInterval(() => {
-				if (score >= 50 && score <= 100) {
-					if (is_start && !is_pause) {
-						let m = new lib.m3();
-						m.x = Math.floor(Math.random() * (874 - 150 + 1) + 150);
-						m.y = -100;
-						exportRoot.addChild(m);
-						let HP = 3;
-						let is_died = false;
-						createjs.Tween.get(m)
-							.to({
-								y: 768
-							}, 20000)
-							.call(() => {
-								is_died = true;
-								Hp -= HP;
-								createjs.Tween.removeTweens(m);
-								exportRoot.removeChild(m);
-							})
-							.addEventListener("change", () => {
-								for (let i = 0; i <= (a1_array.length - 1); i++) {
-									if (a1_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-										if (hit_target) {
-											HP -= 1;
-											if (HP >= 1) {
-												createjs.Sound.play("striking").volume = set_volume;
-											}
-											//兩種暴怒型態
-											if (HP == 2) {
-												m.gotoAndPlay("run3");
-											}
-											if (HP == 1) {
-												m.gotoAndPlay("run2");
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a1_array[i]);
-											exportRoot.removeChild(a1_array[i]);
-											a1_array[i] = 0;
-										}
-									}
-								}
-								for (let i = 0; i <= (a4_array.length - 1); i++) {
-									if (a4_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a7_array.length - 1); i++) {
-									if (a7_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a2_array.length - 1); i++) {
-									if (a2_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
-										if (hit_target) {
-											HP -= 2;
-											if (HP >= 1) {
-												createjs.Sound.play("striking").volume = set_volume;
-											}
-											if (HP == 1) {
-												m.gotoAndPlay("run2");
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a2_array[i]);
-											exportRoot.removeChild(a2_array[i]);
-											a2_array[i] = 0;
-										}
-									}
-								}
-								if (ndgmr.checkRectCollision(ship, m)) {
-									if (is_died) {
-										return;
-									} else {
-										is_died = true;
-										Hp -= HP;
-										createjs.Sound.play("boom").volume = set_volume;
-										m.gotoAndPlay("boom");
-										ship.gotoAndPlay("hit");
+                      function del() {
+                        createjs.Tween.removeTweens(m);
+                        exportRoot.removeChild(m);
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(del, 200);
+                    }
+                  }
+                  if (is_gameover || is_win) {
+                    createjs.Tween.removeTweens(m);
+                    exportRoot.removeChild(m);
+                    clearInterval(monster4);
+                  }
+                });
+              let atk = setInterval(() => {
+                if (is_pause) {
+                  return;
+                }
+                if (is_died) {
+                  clearInterval(atk);
+                }
+                let r = new lib.ro();
+                r.x = 1124;
+                r.y = Math.floor(Math.random() * 668);
+                exportRoot.addChild(r);
+                let is_hit = false;
+                createjs.Tween.get(r)
+                  .to(
+                    {
+                      x: 0,
+                      y: 818,
+                    },
+                    1000 + Math.floor(Math.random() * 2000)
+                  )
+                  .call(() => {
+                    createjs.Tween.removeTweens(r);
+                    exportRoot.removeChild(r);
+                  })
+                  .addEventListener("change", () => {
+                    if (is_hit) {
+                      return;
+                    }
+                    let hit = ndgmr.checkRectCollision(ship, r);
+                    if (hit) {
+                      is_hit = true;
+                      Hp -= 3;
+                      createjs.Sound.play("impact").volume = set_volume;
+                      ship.gotoAndPlay("hit");
 
-										function del() {
-											createjs.Tween.removeTweens(m);
-											exportRoot.removeChild(m);
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(del, 200);
-									}
-								}
-								if (is_gameover || is_win) {
-									createjs.Tween.removeTweens(m);
-									exportRoot.removeChild(m);
-									clearInterval(monster3);
-								}
-							})
-						let atk = setInterval(() => {
-							if (is_pause) {
-								return;
-							}
-							if (is_died) {
-								clearInterval(atk);
-							}
-							if (HP >= 1 && HP <= 2) {
-								let rot = 0;
-								let T = 2500;
-								if (HP == 1) {
-									rot = 360;
-									T = 1500;
-								}
-								let a5 = new lib.a5;
-								a5.x = (m.x - 100);
-								a5.y = 0;
-								exportRoot.addChild(a5);
-								let is_hit = false;
-								createjs.Tween.get(a5)
-									.to({
-										y: 768,
-										x: ship.x,
-										rotation: rot,
-									}, T)
-									.call(() => {
-										createjs.Tween.removeTweens(a5);
-										exportRoot.removeChild(a5);
-									})
-									.addEventListener("change", () => {
-										if (is_hit) {
-											return;
-										}
-										let hit = ndgmr.checkRectCollision(ship, a5);
-										if (hit) {
-											is_hit = true;
-											Hp -= 2;
-											createjs.Sound.play("harmed").volume = set_volume;
-											ship.gotoAndPlay("hit");
-											createjs.Tween.removeTweens(a5);
-											exportRoot.removeChild(a5);
+                      function delay() {
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(delay, 200);
+                    }
+                    if (is_gameover || is_win) {
+                      createjs.Tween.removeTweens(r);
+                      exportRoot.removeChild(r);
+                    }
+                  });
+              }, Math.floor(Math.random() * 3500 + 1500));
+            }
+          }
+        }, 2000);
 
-											function delay() {
-												ship.gotoAndPlay("stop");
-											}
-											setTimeout(delay, 200);
-										}
-										if (is_gameover || is_win) {
-											createjs.Tween.removeTweens(a5);
-											exportRoot.removeChild(a5);
-										}
-									})
-							}
-						}, 1000)
-					}
-				}
-			}, 2000)
+        //怪物5
+        let monster5 = setInterval(() => {
+          if (score >= 100 && score <= 150) {
+            if (is_start && !is_pause) {
+              let m = new lib.m5();
+              m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+              m.y = 0;
+              exportRoot.addChild(m);
+              let HP = 10;
+              let is_died = false;
+              let left = Math.random() >= 0.5 ? false : true;
+              createjs.Tween.get(m)
+                .to(
+                  {
+                    y: 768,
+                  },
+                  25000
+                )
+                .call(() => {
+                  Hp -= HP;
+                  is_died = true;
+                  createjs.Tween.removeTweens(m);
+                  exportRoot.removeChild(m);
+                })
+                .addEventListener("change", () => {
+                  if (left) {
+                    m.x -= 8;
+                  } else {
+                    m.x += 8;
+                  }
+                  if (m.x >= 949) {
+                    left = true;
+                  }
+                  if (m.x <= 0) {
+                    left = false;
+                  }
+                  for (let i = 0; i <= a1_array.length - 1; i++) {
+                    if (a1_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
+                      if (hit_target) {
+                        HP -= 1;
+                        if (HP >= 1) {
+                          createjs.Sound.play("doong").volume = set_volume;
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared2").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a1_array[i]);
+                        exportRoot.removeChild(a1_array[i]);
+                        a1_array[i] = 0;
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a4_array.length - 1; i++) {
+                    if (a4_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared2").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a7_array.length - 1; i++) {
+                    if (a7_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
+                      if (hit_target) {
+                        HP -= 100;
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared2").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                      }
+                    }
+                  }
+                  for (let i = 0; i <= a2_array.length - 1; i++) {
+                    if (a2_array[i] == 0) {
+                      continue;
+                    } else {
+                      let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
+                      if (hit_target) {
+                        HP -= 2;
+                        if (HP >= 1) {
+                          createjs.Sound.play("doong").volume = set_volume;
+                        }
+                        if (HP <= 0) {
+                          function del() {
+                            createjs.Tween.removeTweens(m);
+                            exportRoot.removeChild(m);
+                          }
+                          if (is_died) {
+                            break;
+                          } else {
+                            score += 1;
+                            is_died = true;
+                            createjs.Sound.play("devil_scared2").volume =
+                              set_volume;
+                            m.gotoAndPlay("boom");
+                            setTimeout(del, 100);
+                          }
+                        }
+                        createjs.Tween.removeTweens(a2_array[i]);
+                        exportRoot.removeChild(a2_array[i]);
+                        a2_array[i] = 0;
+                      }
+                    }
+                  }
+                  if (ndgmr.checkRectCollision(ship, m)) {
+                    if (is_died) {
+                      return;
+                    } else {
+                      is_died = true;
+                      Hp -= HP;
+                      createjs.Sound.play("boom").volume = set_volume;
+                      m.gotoAndPlay("boom");
+                      ship.gotoAndPlay("hit");
 
+                      function del() {
+                        createjs.Tween.removeTweens(m);
+                        exportRoot.removeChild(m);
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(del, 200);
+                    }
+                  }
+                  if (is_gameover || is_win) {
+                    createjs.Tween.removeTweens(m);
+                    exportRoot.removeChild(m);
+                    clearInterval(monster5);
+                  }
+                });
+              let atk = setInterval(() => {
+                if (is_pause) {
+                  return;
+                }
+                if (is_died) {
+                  clearInterval(atk);
+                }
+                let f2 = new lib.fi2();
+                f2.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+                f2.y = 0;
+                exportRoot.addChild(f2);
+                let enlarge = Math.floor(Math.random() * 768);
+                let is_hit = false;
+                let is_enlarge = false;
+                createjs.Tween.get(f2)
+                  .to(
+                    {
+                      y: 768,
+                    },
+                    1500
+                  )
+                  .call(() => {
+                    createjs.Tween.removeTweens(f2);
+                    exportRoot.removeChild(f2);
+                  })
+                  .addEventListener("change", () => {
+                    if (is_hit) {
+                      return;
+                    }
+                    if (f2.y > enlarge && !is_enlarge) {
+                      f2.scaleX = 2;
+                      f2.scaleY = 2;
+                      is_enlarge = true;
+                    }
+                    let hit = ndgmr.checkRectCollision(ship, f2);
+                    if (hit) {
+                      is_hit = true;
+                      Hp -= 4;
+                      createjs.Sound.play("harmed").volume = set_volume;
+                      ship.gotoAndPlay("hit");
 
-			//怪物4
-			let monster4 = setInterval(() => {
-				if (score >= 75 && score <= 125) {
-					if (is_start && !is_pause) {
-						let m = new lib.m4();
-						m.x = Math.floor(Math.random() * (874 - 150 + 1) + 150);
-						m.y = -100;
-						exportRoot.addChild(m);
-						let HP = 6;
-						let is_died = false;
-						createjs.Tween.get(m)
-							.to({
-								y: 768,
-							}, 20000)
-							.call(() => {
-								is_died = true;
-								Hp -= HP;
-								createjs.Tween.removeTweens(m);
-								exportRoot.removeChild(m);
-							})
-							.addEventListener("change", () => {
-								for (let i = 0; i <= (a1_array.length - 1); i++) {
-									if (a1_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-										if (hit_target) {
-											HP -= 1;
-											if (HP >= 1) {
-												createjs.Sound.play("ping").volume = set_volume;
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared1").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a1_array[i]);
-											exportRoot.removeChild(a1_array[i]);
-											a1_array[i] = 0;
-										}
-									}
-								}
-								for (let i = 0; i <= (a4_array.length - 1); i++) {
-									if (a4_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared1").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a7_array.length - 1); i++) {
-									if (a7_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared1").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a2_array.length - 1); i++) {
-									if (a2_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
-										if (hit_target) {
-											HP -= 2;
-											if (HP >= 1) {
-												createjs.Sound.play("ping").volume = set_volume;
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("boom").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a2_array[i]);
-											exportRoot.removeChild(a2_array[i]);
-											a2_array[i] = 0;
-										}
-									}
-								}
-								if (ndgmr.checkRectCollision(ship, m)) {
-									if (is_died) {
-										return;
-									} else {
-										is_died = true;
-										Hp -= HP;
-										createjs.Sound.play("boom").volume = set_volume;
-										m.gotoAndPlay("boom");
-										ship.gotoAndPlay("hit");
+                      function delay() {
+                        ship.gotoAndPlay("stop");
+                      }
+                      setTimeout(delay, 200);
+                    }
+                    if (is_gameover || is_win) {
+                      createjs.Tween.removeTweens(f2);
+                      exportRoot.removeChild(f2);
+                    }
+                  });
+              }, Math.floor(Math.random() * 2000 + 1500));
+            }
+          }
+        }, 2500);
 
-										function del() {
-											createjs.Tween.removeTweens(m);
-											exportRoot.removeChild(m);
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(del, 200);
-									}
-								}
-								if (is_gameover || is_win) {
-									createjs.Tween.removeTweens(m);
-									exportRoot.removeChild(m);
-									clearInterval(monster4);
-								}
-							})
-						let atk = setInterval(() => {
-							if (is_pause) {
-								return;
-							}
-							if (is_died) {
-								clearInterval(atk);
-							}
-							let r = new lib.ro;
-							r.x = 1124;
-							r.y = Math.floor(Math.random() * 668);
-							exportRoot.addChild(r);
-							let is_hit = false;
-							createjs.Tween.get(r)
-								.to({
-									x: 0,
-									y: 818,
-								}, (1000 + Math.floor(Math.random() * 2000)))
-								.call(() => {
-									createjs.Tween.removeTweens(r);
-									exportRoot.removeChild(r);
-								})
-								.addEventListener("change", () => {
-									if (is_hit) {
-										return;
-									}
-									let hit = ndgmr.checkRectCollision(ship, r);
-									if (hit) {
-										is_hit = true;
-										Hp -= 3;
-										createjs.Sound.play("impact").volume = set_volume;
-										ship.gotoAndPlay("hit");
+        //boss html
+        function html() {
+          //播放boos出場音效
+          createjs.Sound.play("boss").volume = set_volume;
+          let boss = new lib.hht();
+          boss.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
+          boss.y = Math.floor(Math.random() * (450 - 50 + 1) + 50);
+          exportRoot.addChild(boss);
+          let is_hit = false;
+          //boss隨機模式
+          function b1() {
+            ship.gotoAndPlay("stop");
+            is_hit = false;
+            createjs.Tween.get(boss)
+              .to(
+                {
+                  x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
+                  y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
+                },
+                1000
+              )
+              .call(() => {
+                if (Math.random() > 0.6 ? true : false) {
+                  b3();
+                } else {
+                  b2();
+                }
+              })
+              .addEventListener("change", () => {
+                for (let i = 0; i <= a1_array.length - 1; i++) {
+                  if (a1_array[i] == 0) {
+                    continue;
+                  } else {
+                    let hit_target = ndgmr.checkRectCollision(
+                      a1_array[i],
+                      boss
+                    );
+                    if (hit_target) {
+                      boss_HP -= 1;
+                      if (boss_HP >= 1) {
+                        createjs.Sound.play("ping").volume = set_volume;
+                      }
+                      if (boss_HP <= 0) {
+                        is_win = true;
+                        createjs.Sound.play("boom").volume = set_volume;
+                        createjs.Tween.removeTweens(boss);
+                        exportRoot.removeChild(boss);
+                      }
+                      createjs.Tween.removeTweens(a1_array[i]);
+                      exportRoot.removeChild(a1_array[i]);
+                      a1_array[i] = 0;
+                    }
+                  }
+                }
+                if (is_gameover) {
+                  createjs.Tween.removeTweens(boss);
+                  exportRoot.removeChild(boss);
+                }
+              });
+          }
 
-										function delay() {
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(delay, 200);
-									}
-									if (is_gameover || is_win) {
-										createjs.Tween.removeTweens(r);
-										exportRoot.removeChild(r);
-									}
-								})
-						}, Math.floor(Math.random() * 3500 + 1500))
-					}
-				}
-			}, 2000)
+          //boss緩衝模式
+          function b2() {
+            createjs.Tween.get(boss)
+              .to(
+                {
+                  x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
+                  y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
+                },
+                1000
+              )
+              .call(() => {
+                b1();
+              })
+              .addEventListener("change", () => {
+                for (let i = 0; i <= a1_array.length - 1; i++) {
+                  if (a1_array[i] == 0) {
+                    continue;
+                  } else {
+                    let hit_target = ndgmr.checkRectCollision(
+                      a1_array[i],
+                      boss
+                    );
+                    if (hit_target) {
+                      boss_HP -= 1;
+                      if (boss_HP >= 1) {
+                        createjs.Sound.play("ping").volume = set_volume;
+                      }
+                      if (boss_HP <= 0) {
+                        is_win = true;
+                        createjs.Sound.play("boom").volume = set_volume;
+                        createjs.Tween.removeTweens(boss);
+                        exportRoot.removeChild(boss);
+                      }
+                      createjs.Tween.removeTweens(a1_array[i]);
+                      exportRoot.removeChild(a1_array[i]);
+                      a1_array[i] = 0;
+                    }
+                  }
+                }
+                if (is_gameover) {
+                  createjs.Tween.removeTweens(boss);
+                  exportRoot.removeChild(boss);
+                }
+              });
+          }
 
+          //boss攻擊模式
+          function b3() {
+            createjs.Tween.get(boss)
+              .to(
+                {
+                  x: ship.x,
+                  y: ship.y,
+                },
+                100
+              )
+              .call(() => {
+                b2();
+              })
+              .addEventListener("change", () => {
+                if (ndgmr.checkRectCollision(ship, boss)) {
+                  if (is_hit) {
+                    return;
+                  } else {
+                    is_hit = true;
+                    Hp -= 10;
+                    ship.gotoAndPlay("hit");
+                    createjs.Sound.play("harmed").volume = set_volume;
+                  }
+                }
+              });
+          }
 
-			//怪物5
-			let monster5 = setInterval(() => {
-				if (score >= 100 && score <= 150) {
-					if (is_start && !is_pause) {
-						let m = new lib.m5();
-						m.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-						m.y = 0;
-						exportRoot.addChild(m);
-						let HP = 10;
-						let is_died = false;
-						let left = Math.random() >= 0.5 ? false : true;
-						createjs.Tween.get(m)
-							.to({
-								y: 768,
-							}, 25000)
-							.call(() => {
-								Hp -= HP;
-								is_died = true;
-								createjs.Tween.removeTweens(m);
-								exportRoot.removeChild(m);
-							})
-							.addEventListener("change", () => {
-								if (left) {
-									m.x -= 8;
-								} else {
-									m.x += 8;
-								}
-								if (m.x >= 949) {
-									left = true;
-								}
-								if (m.x <= 0) {
-									left = false;
-								}
-								for (let i = 0; i <= (a1_array.length - 1); i++) {
-									if (a1_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a1_array[i], m);
-										if (hit_target) {
-											HP -= 1;
-											if (HP >= 1) {
-												createjs.Sound.play("doong").volume = set_volume;
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared2").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a1_array[i]);
-											exportRoot.removeChild(a1_array[i]);
-											a1_array[i] = 0;
-										}
-									}
-								}
-								for (let i = 0; i <= (a4_array.length - 1); i++) {
-									if (a4_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a4_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared2").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a7_array.length - 1); i++) {
-									if (a7_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a7_array[i], m);
-										if (hit_target) {
-											HP -= 100;
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared2").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-										}
-									}
-								}
-								for (let i = 0; i <= (a2_array.length - 1); i++) {
-									if (a2_array[i] == 0) {
-										continue;
-									} else {
-										let hit_target = ndgmr.checkRectCollision(a2_array[i], m);
-										if (hit_target) {
-											HP -= 2;
-											if (HP >= 1) {
-												createjs.Sound.play("doong").volume = set_volume;
-											}
-											if (HP <= 0) {
-												function del() {
-													createjs.Tween.removeTweens(m);
-													exportRoot.removeChild(m);
-												}
-												if (is_died) {
-													break;
-												} else {
-													score += 1;
-													is_died = true;
-													createjs.Sound.play("devil_scared2").volume = set_volume;
-													m.gotoAndPlay("boom");
-													setTimeout(del, 100);
-												}
-											}
-											createjs.Tween.removeTweens(a2_array[i]);
-											exportRoot.removeChild(a2_array[i]);
-											a2_array[i] = 0;
-										}
-									}
-								}
-								if (ndgmr.checkRectCollision(ship, m)) {
-									if (is_died) {
-										return;
-									} else {
-										is_died = true;
-										Hp -= HP;
-										createjs.Sound.play("boom").volume = set_volume;
-										m.gotoAndPlay("boom");
-										ship.gotoAndPlay("hit");
+          //呼叫 function b1
+          b1();
+        }
 
-										function del() {
-											createjs.Tween.removeTweens(m);
-											exportRoot.removeChild(m);
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(del, 200);
-									}
-								}
-								if (is_gameover || is_win) {
-									createjs.Tween.removeTweens(m);
-									exportRoot.removeChild(m);
-									clearInterval(monster5);
-								}
-							})
-						let atk = setInterval(() => {
-							if (is_pause) {
-								return;
-							}
-							if (is_died) {
-								clearInterval(atk);
-							}
-							let f2 = new lib.fi2;
-							f2.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-							f2.y = 0;
-							exportRoot.addChild(f2);
-							let enlarge = Math.floor(Math.random() * 768);
-							let is_hit = false;
-							let is_enlarge = false;
-							createjs.Tween.get(f2)
-								.to({
-									y: 768,
-								}, 1500)
-								.call(() => {
-									createjs.Tween.removeTweens(f2);
-									exportRoot.removeChild(f2);
-								})
-								.addEventListener("change", () => {
-									if (is_hit) {
-										return;
-									}
-									if (f2.y > enlarge && !is_enlarge) {
-										f2.scaleX = 2;
-										f2.scaleY = 2;
-										is_enlarge = true;
-									}
-									let hit = ndgmr.checkRectCollision(ship, f2);
-									if (hit) {
-										is_hit = true;
-										Hp -= 4;
-										createjs.Sound.play("harmed").volume = set_volume;
-										ship.gotoAndPlay("hit");
+        //保鑣 css
+        function css() {
+          let ccs = new lib.ccs();
+          ccs.x = 100;
+          ccs.y = 500;
+          exportRoot.addChild(ccs);
+          createjs.Tween.get(ccs, {
+            loop: true,
+          })
+            .to(
+              {
+                x: 924,
+              },
+              Math.floor(Math.random() * 3000) + 1000
+            )
+            .to(
+              {
+                x: 100,
+              },
+              Math.floor(Math.random() * 3000) + 1000
+            )
+            .addEventListener("change", () => {
+              for (let i = 0; i <= a1_array.length - 1; i++) {
+                if (a1_array[i] == 0) {
+                  continue;
+                } else {
+                  let hit_target = ndgmr.checkRectCollision(a1_array[i], ccs);
+                  if (hit_target) {
+                    createjs.Tween.removeTweens(a1_array[i]);
+                    exportRoot.removeChild(a1_array[i]);
+                    a1_array[i] = 0;
+                  }
+                }
+              }
+              if (is_win || is_gameover) {
+                createjs.Tween.removeTweens(ccs);
+                exportRoot.removeChild(ccs);
+              }
+            });
+        }
 
-										function delay() {
-											ship.gotoAndPlay("stop");
-										}
-										setTimeout(delay, 200);
-									}
-									if (is_gameover || is_win) {
-										createjs.Tween.removeTweens(f2);
-										exportRoot.removeChild(f2);
-									}
-								})
-						}, Math.floor(Math.random() * 2000 + 1500))
-					}
-				}
-			}, 2500)
+        //保鑣 js
+        function js() {
+          let jjs = new lib.jjs();
+          jjs.x = 924;
+          jjs.y = 350;
+          exportRoot.addChild(jjs);
+          createjs.Tween.get(jjs, {
+            loop: true,
+          })
+            .to(
+              {
+                x: 100,
+              },
+              Math.floor(Math.random() * 3000) + 1000
+            )
+            .to(
+              {
+                x: 924,
+              },
+              Math.floor(Math.random() * 3000) + 1000
+            )
+            .addEventListener("change", () => {
+              for (let i = 0; i <= a1_array.length - 1; i++) {
+                if (a1_array[i] == 0) {
+                  continue;
+                } else {
+                  let hit_target = ndgmr.checkRectCollision(a1_array[i], jjs);
+                  if (hit_target) {
+                    createjs.Tween.removeTweens(a1_array[i]);
+                    exportRoot.removeChild(a1_array[i]);
+                    a1_array[i] = 0;
+                  }
+                }
+              }
+              if (is_win || is_gameover) {
+                createjs.Tween.removeTweens(jjs);
+                exportRoot.removeChild(jjs);
+              }
+            });
+        }
 
+        function boss() {
+          //顯示boss血條
+          $(".boss_hpBar").css("display", "flex");
+          //呼叫 function html css js
+          html();
+          css();
+          js();
+        }
 
-			//boss html
-			function html() {
-				//播放boos出場音效
-				createjs.Sound.play("boss").volume = set_volume;
-				let boss = new lib.hht();
-				boss.x = Math.floor(Math.random() * (924 - 100 + 1) + 100);
-				boss.y = Math.floor(Math.random() * (450 - 50 + 1) + 50);
-				exportRoot.addChild(boss);
-				let is_hit = false;
-				//boss隨機模式
-				function b1() {
-					ship.gotoAndPlay("stop");
-					is_hit = false;
-					createjs.Tween.get(boss)
-						.to({
-							x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
-							y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
-						}, 1000)
-						.call(() => {
-							if (Math.random() > 0.6 ? true : false) {
-								b3();
-							} else {
-								b2();
-							}
-						})
-						.addEventListener("change", () => {
-							for (let i = 0; i <= (a1_array.length - 1); i++) {
-								if (a1_array[i] == 0) {
-									continue;
-								} else {
-									let hit_target = ndgmr.checkRectCollision(a1_array[i], boss);
-									if (hit_target) {
-										boss_HP -= 1;
-										if (boss_HP >= 1) {
-											createjs.Sound.play("ping").volume = set_volume;
-										}
-										if (boss_HP <= 0) {
-											is_win = true;
-											createjs.Sound.play("boom").volume = set_volume;
-											createjs.Tween.removeTweens(boss);
-											exportRoot.removeChild(boss);
-										}
-										createjs.Tween.removeTweens(a1_array[i]);
-										exportRoot.removeChild(a1_array[i]);
-										a1_array[i] = 0;
-									}
-								}
-							}
-							if (is_gameover) {
-								createjs.Tween.removeTweens(boss);
-								exportRoot.removeChild(boss);
-							}
-						})
-				}
+        //鍵盤按下時執行function KDF
+        function KDF(e) {
+          //回傳鍵盤按鍵的keyCode
+          console.log(e.keyCode);
+          //鍵盤keyCode 37左 38上 39右 40下
+          if (!is_pause) {
+            //飛船水平移動方向控制
+            if (e.keyCode === 37 || e.keyCode === 39) {
+              //按鍵按下期間只執行一次(避免飛船影像重複loading)
+              if (is_KD) return;
+              //鍵盤按下為真
+              is_KD = true;
+              //改變飛船水平移動變數值
+              H = e.keyCode === 39 ? 1 : -1;
+              //移動時飛船播放run狀態(噴火)
+              ship.gotoAndPlay("run");
+            }
+            //飛船垂直移動方向控制
+            if (e.keyCode === 38 || e.keyCode === 40) {
+              //按鍵按下期間只執行一次(避免飛船影像重複loading)
+              if (is_KD) return;
+              //鍵盤按下為真
+              is_KD = true;
+              //改變飛船垂直移動變數值
+              V = e.keyCode === 38 ? -1 : 1;
+              ship.gotoAndPlay("run");
+            }
+            //按空白鍵發射子彈
+            if (e.keyCode === 32) {
+              console.log("a1子彈數" + a1_num + "顆");
+              //播放a1子彈發射音效
+              createjs.Sound.play("attack1").volume = set_volume;
+              //記錄當前a1_num數值
+              let tmp = a1_num;
+              //a1_num(a1子彈個數)+1
+              a1_num += 1;
+              //當a1_num大於100時歸零
+              if (a1_num > 100) {
+                a1_num = 0;
+              }
+              //呼叫function a1_generate 產生a1子彈後存入陣列a1_array[tmp]中
+              a1_array[tmp] = a1_generate();
+              //取得當前飛船的位置
+              let ship_x = ship.x + 12;
+              let ship_y = ship.y - 23;
+              //設定a1子彈初始位置
+              a1_array[tmp].x = ship_x;
+              a1_array[tmp].y = ship_y;
+              //顯示a1子彈
+              exportRoot.addChild(a1_array[tmp]);
+              createjs.Tween.get(a1_array[tmp])
+                .to(
+                  {
+                    y: -100,
+                  },
+                  1500
+                )
+                .call(() => {
+                  createjs.Tween.removeTweens(a1_array[tmp]);
+                  exportRoot.removeChild(a1_array[tmp]);
+                  a1_array[tmp] = 0;
+                });
+            }
+            //按Q發射雷球
+            if (e.keyCode === 81 && Mp >= 1) {
+              Mp -= 1;
+              console.log("a2雷球數" + a2_num + "顆");
+              createjs.Sound.play("lightning").volume = set_volume;
+              let tmp = a2_num;
+              a2_num += 1;
+              if (a2_num > 300) {
+                a2_num = 0;
+              }
+              a2_array[tmp] = a2_generate();
+              let ship_x = ship.x + 7;
+              let ship_y = ship.y - 40;
+              a2_array[tmp].x = ship_x;
+              a2_array[tmp].y = ship_y;
+              a2_array[tmp].scaleX = 0.5;
+              a2_array[tmp].scaleY = 0.5;
+              exportRoot.addChild(a2_array[tmp]);
+              createjs.Tween.get(a2_array[tmp]).to(
+                {
+                  rotation: 180,
+                },
+                10000
+              );
+              createjs.Tween.get(a2_array[tmp])
+                .to(
+                  {
+                    y: -100,
+                  },
+                  6000
+                )
+                .call(() => {
+                  createjs.Tween.removeTweens(a2_array[tmp]);
+                  exportRoot.removeChild(a2_array[tmp]);
+                  a2_array[tmp] = 0;
+                });
+            }
+            //按W發射月牙天衝
+            if (e.keyCode === 87 && Mp >= 5) {
+              Mp -= 5;
+              console.log("a7月牙天衝數" + a7_num + "個");
+              createjs.Sound.play("attack7").volume = set_volume;
+              let tmp = a7_num;
+              a7_num += 1;
+              if (a7_num > 100) {
+                a7_num = 0;
+              }
+              a7_array[tmp] = a7_generate();
+              let ship_x = ship.x + 50;
+              let ship_y = ship.y + 10;
+              a7_array[tmp].x = ship_x;
+              a7_array[tmp].y = ship_y;
+              exportRoot.addChild(a7_array[tmp]);
+              createjs.Tween.get(a7_array[tmp])
+                .to(
+                  {
+                    y: -100,
+                  },
+                  2500
+                )
+                .call(() => {
+                  createjs.Tween.removeTweens(a7_array[tmp]);
+                  exportRoot.removeChild(a7_array[tmp]);
+                  a7_array[tmp] = 0;
+                });
+            }
+            //按R發射脈衝波
+            if (e.keyCode === 82 && Mp >= 10) {
+              Mp -= 10;
+              console.log("a4脈衝波數" + a4_num + "個");
+              createjs.Sound.play("lazer").volume = set_volume;
+              let tmp = a4_num;
+              a4_num += 1;
+              if (a4_num > 100) {
+                a4_num = 0;
+              }
+              a4_array[tmp] = a4_generate();
+              let ship_y = ship.y - 20;
+              a4_array[tmp].x = 0;
+              a4_array[tmp].y = ship_y;
+              exportRoot.addChild(a4_array[tmp]);
+              createjs.Tween.get(a4_array[tmp])
+                .to(
+                  {
+                    y: -100,
+                  },
+                  2000
+                )
+                .call(() => {
+                  createjs.Tween.removeTweens(a4_array[tmp]);
+                  exportRoot.removeChild(a4_array[tmp]);
+                  a4_array[tmp] = 0;
+                });
+            }
+          }
+          //按S回滿血/藍
+          if (e.keyCode === 83 && bonus > 0) {
+            //bonus次數-1
+            bonus -= 1;
+            createjs.Sound.play("hp_up").volume = set_volume;
+            //Hp/Mp回復
+            Hp = 100;
+            Mp = 100;
+          }
+          //按P遊戲暫停
+          if (e.keyCode === 80) {
+            if (!is_pause) {
+              createjs.Sound.stop();
+              createjs.Ticker.paused = true;
+              is_pause = true;
+            } else {
+              createjs.Ticker.paused = false;
+              is_pause = false;
+            }
+          }
+        }
+        //鍵盤放開時執行function KUF
+        function KUF(e) {
+          if (e.keyCode === 37 || e.keyCode == 39) {
+            //鍵盤按下為否
+            is_KD = false;
+            //停止移動時飛船撥放stop狀態(飛船漂浮)
+            ship.gotoAndPlay("stop");
+            //飛船水平移動變數值歸0
+            H = 0;
+          }
+          if (e.keyCode === 38 || e.keyCode == 40) {
+            is_KD = false;
+            ship.gotoAndPlay("stop");
+            //飛船垂直移動變數值歸0
+            V = 0;
+          }
+        }
 
-				//boss緩衝模式
-				function b2() {
-					createjs.Tween.get(boss)
-						.to({
-							x: Math.floor(Math.random() * (924 - 100 + 1) + 100),
-							y: Math.floor(Math.random() * (450 - 50 + 1) + 50),
-						}, 1000)
-						.call(() => {
-							b1();
-						})
-						.addEventListener("change", () => {
-							for (let i = 0; i <= (a1_array.length - 1); i++) {
-								if (a1_array[i] == 0) {
-									continue;
-								} else {
-									let hit_target = ndgmr.checkRectCollision(a1_array[i], boss);
-									if (hit_target) {
-										boss_HP -= 1;
-										if (boss_HP >= 1) {
-											createjs.Sound.play("ping").volume = set_volume;
-										}
-										if (boss_HP <= 0) {
-											is_win = true;
-											createjs.Sound.play("boom").volume = set_volume;
-											createjs.Tween.removeTweens(boss);
-											exportRoot.removeChild(boss);
-										}
-										createjs.Tween.removeTweens(a1_array[i]);
-										exportRoot.removeChild(a1_array[i]);
-										a1_array[i] = 0;
-									}
-								}
-							}
-							if (is_gameover) {
-								createjs.Tween.removeTweens(boss);
-								exportRoot.removeChild(boss);
-							}
-						})
-				}
+        // Ticker 事件監聽(更新遊戲事件)
+        function change() {
+          //控制飛船移動同時限制飛船移動範圍
+          //左右移動
+          if (H == 1 && ship.x <= 974) {
+            //向右移動
+            ship.x += D * H;
+          }
+          if (H == -1 && ship.x >= 25) {
+            //向左移動
+            ship.x += D * H;
+          }
+          //上下移動
+          if (V == -1) {
+            //向上移動
+            ship.y += D * V;
+          }
+          if (V == 1 && ship.y <= 718) {
+            // 向上移動
+            ship.y += D * V;
+          }
+          //隱藏外掛
+          if (ship.y <= -100 && score >= 150) {
+            is_win = true;
+          }
+          //更新遊戲得分、血量、藍量、boss血量
+          //jquery版本
+          $(".score").text(score);
+          $(".hp").css("width", Hp + "%");
+          $(".mp").css("width", Mp + "%");
+          $(".boss_hp").css("width", boss_HP + "%");
+          //DOM 版本
+          // document.querySelector(".score").innerHTML = score;
+          // document.querySelector(".hp").style.width = `${Hp}%`;
+          // document.querySelector(".mp").style.width = `${Mp}%`;
+          //當玩家血量歸0遊戲失敗
+          if (Hp <= 0) {
+            //遊戲失敗為真
+            is_gameover = true;
+            //播放遊戲失敗音效
+            createjs.Sound.play("game_over").volume = set_volume;
+            //jquery版本
+            $("#game_over").css("display", "flex");
+            $("#restart").css("display", "flex");
+            $(".boss_hpBar").remove();
+            //DOM 版本
+            // document.querySelector("#game_over").style.display = "flex";
+            // document.querySelector("#restart").style.display = "flex";
+            //關掉鍵盤事件監聽
+            window.removeEventListener("keydown", KDF);
+            window.removeEventListener("keyup", KUF);
+            //關掉 Ticker 事件監聽(停止更新遊戲事件)
+            createjs.Ticker.removeEventListener("tick", change);
+            //飛船爆炸
+            function boom() {
+              createjs.Sound.play("boom").volume = set_volume;
+              ship.gotoAndPlay("boom");
+              //刪除飛船
+              function del() {
+                createjs.Tween.removeTweens(ship);
+                exportRoot.removeChild(ship);
+              }
+              setTimeout(del, 300);
+            }
+            setTimeout(boom, 2500);
+          }
+          //遊戲勝利
+          if (is_win) {
+            createjs.Sound.play("win").volume = set_volume;
+            //jquery版本
+            $("#win_game").css("display", "flex");
+            $("#restart").css("display", "flex");
+            $(".boss_hpBar").remove();
+            //DOM 版本
+            // document.querySelector("#win_game").style.display = "flex";
+            // document.querySelector("#restart").style.display = "flex";
+            //關掉鍵盤事件監聽
+            window.removeEventListener("keydown", KDF);
+            window.removeEventListener("keyup", KUF);
+            //關掉 Ticker 事件監聽(停止更新遊戲事件)
+            createjs.Ticker.removeEventListener("tick", change);
+            if (ship.y >= 0) {
+              ship.gotoAndPlay("run");
+              createjs.Tween.get(ship)
+                .to(
+                  {
+                    y: -100,
+                  },
+                  5000
+                )
+                .call(() => {
+                  createjs.Tween.removeTweens(ship);
+                  exportRoot.removeChild(ship);
+                });
+            }
+            if (ship.y < 0) {
+              createjs.Tween.removeTweens(ship);
+              exportRoot.removeChild(ship);
+            }
+          }
+          //當遊戲分數達150分時魔王出現
+          if (score == 150 && !boss_show) {
+            boss_show = true;
+            setTimeout(boss, 500);
+          }
+          //boss血條顏色變化
+          if (boss_HP >= 30 && boss_HP <= 70) {
+            $(".boss_hp").css("background-color", "yellow");
+          }
+          if (boss_HP < 30) {
+            $(".boss_hp").css("background-color", "red");
+          }
+        }
 
-				//boss攻擊模式
-				function b3() {
-					createjs.Tween.get(boss)
-						.to({
-							x: ship.x,
-							y: ship.y,
-						}, 100)
-						.call(() => {
-							b2();
-						})
-						.addEventListener("change", () => {
-							if (ndgmr.checkRectCollision(ship, boss)) {
-								if (is_hit) {
-									return;
-								} else {
-									is_hit = true;
-									Hp -= 10;
-									ship.gotoAndPlay("hit");
-									createjs.Sound.play("harmed").volume = set_volume;
-								}
-							}
-						})
-				}
+        //遊戲畫面更新
+        fnStartAnimation = function () {
+          createjs.Ticker.framerate = lib.properties.fps;
+          createjs.Ticker.addEventListener("tick", stage);
+        };
 
-				//呼叫 function b1
-				b1();
-			}
+        //支援螢幕縮放
+        AdobeAn.makeResponsive(false, "both", false, 1, [
+          canvas,
+          anim_container,
+          dom_overlay_container,
+        ]);
+        AdobeAn.compositionLoaded(lib.properties.id);
+        fnStartAnimation();
+      }
+    </script>
+    <!-- 引用jquery -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.js"
+      integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+      crossorigin="anonymous"
+    ></script>
+  </head>
 
-
-			//保鑣 css
-			function css() {
-				let ccs = new lib.ccs();
-				ccs.x = 100;
-				ccs.y = 500;
-				exportRoot.addChild(ccs);
-				createjs.Tween.get(ccs, {
-						loop: true
-					})
-					.to({
-						x: 924,
-					}, (Math.floor(Math.random() * 3000) + 1000))
-					.to({
-						x: 100,
-					}, (Math.floor(Math.random() * 3000) + 1000))
-					.addEventListener("change", () => {
-						for (let i = 0; i <= (a1_array.length - 1); i++) {
-							if (a1_array[i] == 0) {
-								continue;
-							} else {
-								let hit_target = ndgmr.checkRectCollision(a1_array[i], ccs);
-								if (hit_target) {
-									createjs.Tween.removeTweens(a1_array[i]);
-									exportRoot.removeChild(a1_array[i]);
-									a1_array[i] = 0;
-								}
-							}
-						}
-						if (is_win || is_gameover) {
-							createjs.Tween.removeTweens(ccs);
-							exportRoot.removeChild(ccs);
-						}
-
-					})
-			}
-
-
-			//保鑣 js
-			function js() {
-				let jjs = new lib.jjs();
-				jjs.x = 924;
-				jjs.y = 350;
-				exportRoot.addChild(jjs);
-				createjs.Tween.get(jjs, {
-						loop: true
-					})
-					.to({
-						x: 100,
-					}, (Math.floor(Math.random() * 3000) + 1000))
-					.to({
-						x: 924,
-					}, (Math.floor(Math.random() * 3000) + 1000))
-					.addEventListener("change", () => {
-						for (let i = 0; i <= (a1_array.length - 1); i++) {
-							if (a1_array[i] == 0) {
-								continue;
-							} else {
-								let hit_target = ndgmr.checkRectCollision(a1_array[i], jjs);
-								if (hit_target) {
-									createjs.Tween.removeTweens(a1_array[i]);
-									exportRoot.removeChild(a1_array[i]);
-									a1_array[i] = 0;
-								}
-							}
-						}
-						if (is_win || is_gameover) {
-							createjs.Tween.removeTweens(jjs);
-							exportRoot.removeChild(jjs);
-						}
-					})
-			}
-
-
-			function boss() {
-				//顯示boss血條
-				$('.boss_hpBar').css("display", "flex");
-				//呼叫 function html css js
-				html();
-				css();
-				js();
-			}
-
-
-			//鍵盤按下時執行function KDF
-			function KDF(e) {
-				//回傳鍵盤按鍵的keyCode
-				console.log(e.keyCode);
-				//鍵盤keyCode 37左 38上 39右 40下
-				if (!is_pause) {
-					//飛船水平移動方向控制
-					if (e.keyCode === 37 || e.keyCode === 39) {
-						//按鍵按下期間只執行一次(避免飛船影像重複loading)
-						if (is_KD) return;
-						//鍵盤按下為真
-						is_KD = true;
-						//改變飛船水平移動變數值
-						H = e.keyCode === 39 ? 1 : -1;
-						//移動時飛船播放run狀態(噴火)
-						ship.gotoAndPlay("run");
-					}
-					//飛船垂直移動方向控制
-					if (e.keyCode === 38 || e.keyCode === 40) {
-						//按鍵按下期間只執行一次(避免飛船影像重複loading)
-						if (is_KD) return;
-						//鍵盤按下為真
-						is_KD = true;
-						//改變飛船垂直移動變數值
-						V = e.keyCode === 38 ? -1 : 1;
-						ship.gotoAndPlay("run");
-					}
-					//按空白鍵發射子彈
-					if (e.keyCode === 32) {
-						console.log("a1子彈數" + a1_num + "顆");
-						//播放a1子彈發射音效
-						createjs.Sound.play("attack1").volume = set_volume;
-						//記錄當前a1_num數值
-						let tmp = a1_num;
-						//a1_num(a1子彈個數)+1
-						a1_num += 1;
-						//當a1_num大於100時歸零
-						if (a1_num > 100) {
-							a1_num = 0;
-						}
-						//呼叫function a1_generate 產生a1子彈後存入陣列a1_array[tmp]中
-						a1_array[tmp] = a1_generate();
-						//取得當前飛船的位置
-						let ship_x = (ship.x + 12);
-						let ship_y = (ship.y - 23);
-						//設定a1子彈初始位置
-						a1_array[tmp].x = ship_x;
-						a1_array[tmp].y = ship_y;
-						//顯示a1子彈
-						exportRoot.addChild(a1_array[tmp]);
-						createjs.Tween.get(a1_array[tmp])
-							.to({
-								y: -100
-							}, 1500)
-							.call(() => {
-								createjs.Tween.removeTweens(a1_array[tmp]);
-								exportRoot.removeChild(a1_array[tmp]);
-								a1_array[tmp] = 0;
-							})
-					}
-					//按Q發射雷球
-					if (e.keyCode === 81 && Mp >= 1) {
-						Mp -= 1;
-						console.log("a2雷球數" + a2_num + "顆");
-						createjs.Sound.play("lightning").volume = set_volume;
-						let tmp = a2_num;
-						a2_num += 1;
-						if (a2_num > 300) {
-							a2_num = 0;
-						}
-						a2_array[tmp] = a2_generate();
-						let ship_x = (ship.x + 7);
-						let ship_y = (ship.y - 40);
-						a2_array[tmp].x = ship_x;
-						a2_array[tmp].y = ship_y;
-						a2_array[tmp].scaleX = 0.5;
-						a2_array[tmp].scaleY = 0.5;
-						exportRoot.addChild(a2_array[tmp]);
-						createjs.Tween.get(a2_array[tmp])
-							.to({
-								rotation: 180,
-							}, 10000)
-						createjs.Tween.get(a2_array[tmp])
-							.to({
-								y: -100
-							}, 6000)
-							.call(() => {
-								createjs.Tween.removeTweens(a2_array[tmp]);
-								exportRoot.removeChild(a2_array[tmp]);
-								a2_array[tmp] = 0;
-							})
-					}
-					//按W發射月牙天衝
-					if (e.keyCode === 87 && Mp >= 5) {
-						Mp -= 5;
-						console.log("a7月牙天衝數" + a7_num + "個");
-						createjs.Sound.play("attack7").volume = set_volume;
-						let tmp = a7_num;
-						a7_num += 1;
-						if (a7_num > 100) {
-							a7_num = 0;
-						}
-						a7_array[tmp] = a7_generate();
-						let ship_x = (ship.x + 50);
-						let ship_y = (ship.y + 10);
-						a7_array[tmp].x = ship_x;
-						a7_array[tmp].y = ship_y;
-						exportRoot.addChild(a7_array[tmp]);
-						createjs.Tween.get(a7_array[tmp])
-							.to({
-								y: -100
-							}, 2500)
-							.call(() => {
-								createjs.Tween.removeTweens(a7_array[tmp]);
-								exportRoot.removeChild(a7_array[tmp]);
-								a7_array[tmp] = 0;
-							})
-					}
-					//按R發射脈衝波
-					if (e.keyCode === 82 && Mp >= 10) {
-						Mp -= 10;
-						console.log("a4脈衝波數" + a4_num + "個");
-						createjs.Sound.play("lazer").volume = set_volume;
-						let tmp = a4_num;
-						a4_num += 1;
-						if (a4_num > 100) {
-							a4_num = 0;
-						}
-						a4_array[tmp] = a4_generate();
-						let ship_y = (ship.y - 20);
-						a4_array[tmp].x = 0;
-						a4_array[tmp].y = ship_y;
-						exportRoot.addChild(a4_array[tmp]);
-						createjs.Tween.get(a4_array[tmp])
-							.to({
-								y: -100
-							}, 2000)
-							.call(() => {
-								createjs.Tween.removeTweens(a4_array[tmp]);
-								exportRoot.removeChild(a4_array[tmp]);
-								a4_array[tmp] = 0;
-							})
-					}
-				}
-				//按S回滿血/藍
-				if (e.keyCode === 83 && bonus > 0) {
-					//bonus次數-1
-					bonus -= 1;
-					createjs.Sound.play("hp_up").volume = set_volume;
-					//Hp/Mp回復
-					Hp = 100;
-					Mp = 100;
-				}
-				//按P遊戲暫停
-				if (e.keyCode === 80) {
-					if (!is_pause) {
-						createjs.Sound.stop();
-						createjs.Ticker.paused = true;
-						is_pause = true;
-					} else {
-						createjs.Ticker.paused = false;
-						is_pause = false;
-					}
-				}
-			}
-			//鍵盤放開時執行function KUF
-			function KUF(e) {
-				if (e.keyCode === 37 || e.keyCode == 39) {
-					//鍵盤按下為否
-					is_KD = false;
-					//停止移動時飛船撥放stop狀態(飛船漂浮)
-					ship.gotoAndPlay("stop");
-					//飛船水平移動變數值歸0
-					H = 0;
-				}
-				if (e.keyCode === 38 || e.keyCode == 40) {
-					is_KD = false;
-					ship.gotoAndPlay("stop");
-					//飛船垂直移動變數值歸0					
-					V = 0;
-				}
-			}
-
-			// Ticker 事件監聽(更新遊戲事件)
-			function change() {
-				//控制飛船移動同時限制飛船移動範圍
-				//左右移動
-				if (H == 1 && ship.x <= 974) {
-					//向右移動
-					ship.x += D * H;
-				}
-				if (H == -1 && ship.x >= 25) {
-					//向左移動
-					ship.x += D * H;
-				}
-				//上下移動
-				if (V == -1) {
-					//向上移動
-					ship.y += D * V;
-				}
-				if (V == 1 && ship.y <= 718) {
-					// 向上移動
-					ship.y += D * V;
-				}
-				//隱藏外掛
-				if (ship.y <= -100 && score >= 150) {
-					is_win = true;
-				}
-				//更新遊戲得分、血量、藍量、boss血量
-				//jquery版本
-				$('.score').text(score);
-				$('.hp').css("width", Hp + "%");
-				$('.mp').css("width", Mp + "%");
-				$('.boss_hp').css("width", boss_HP + "%");
-				//DOM 版本
-				// document.querySelector(".score").innerHTML = score;
-				// document.querySelector(".hp").style.width = `${Hp}%`;
-				// document.querySelector(".mp").style.width = `${Mp}%`;
-				//當玩家血量歸0遊戲失敗
-				if (Hp <= 0) {
-					//遊戲失敗為真
-					is_gameover = true;
-					//播放遊戲失敗音效
-					createjs.Sound.play("game_over").volume = set_volume;
-					//jquery版本
-					$('#game_over').css("display", "flex");
-					$('#restart').css("display", "flex");
-					$('.boss_hpBar').remove();
-					//DOM 版本
-					// document.querySelector("#game_over").style.display = "flex";
-					// document.querySelector("#restart").style.display = "flex";
-					//關掉鍵盤事件監聽
-					window.removeEventListener("keydown", KDF);
-					window.removeEventListener("keyup", KUF);
-					//關掉 Ticker 事件監聽(停止更新遊戲事件)
-					createjs.Ticker.removeEventListener("tick", change);
-					//飛船爆炸
-					function boom() {
-						createjs.Sound.play("boom").volume = set_volume;
-						ship.gotoAndPlay("boom");
-						//刪除飛船
-						function del() {
-							createjs.Tween.removeTweens(ship);
-							exportRoot.removeChild(ship);
-						}
-						setTimeout(del, 300);
-					}
-					setTimeout(boom, 2500);
-				}
-				//遊戲勝利
-				if (is_win) {
-					createjs.Sound.play("win").volume = set_volume;
-					//jquery版本
-					$('#win_game').css("display", "flex");
-					$('#restart').css("display", "flex");
-					$('.boss_hpBar').remove();
-					//DOM 版本
-					// document.querySelector("#win_game").style.display = "flex";
-					// document.querySelector("#restart").style.display = "flex";
-					//關掉鍵盤事件監聽
-					window.removeEventListener("keydown", KDF);
-					window.removeEventListener("keyup", KUF);
-					//關掉 Ticker 事件監聽(停止更新遊戲事件)
-					createjs.Ticker.removeEventListener("tick", change);
-					if (ship.y >= 0) {
-						ship.gotoAndPlay("run");
-						createjs.Tween.get(ship)
-							.to({
-								y: -100
-							}, 5000)
-							.call(() => {
-								createjs.Tween.removeTweens(ship);
-								exportRoot.removeChild(ship);
-							})
-					}
-					if (ship.y < 0) {
-						createjs.Tween.removeTweens(ship);
-						exportRoot.removeChild(ship);
-					}
-				}
-				//當遊戲分數達150分時魔王出現
-				if (score == 150 && !boss_show) {
-					boss_show = true;
-					setTimeout(boss, 500);
-				}
-				//boss血條顏色變化
-				if (boss_HP >= 30 && boss_HP <= 70) {
-					$('.boss_hp').css("background-color", "yellow");
-				}
-				if (boss_HP < 30) {
-					$('.boss_hp').css("background-color", "red");
-				}
-			}
-
-			//遊戲畫面更新
-			fnStartAnimation = function () {
-				createjs.Ticker.framerate = lib.properties.fps;
-				createjs.Ticker.addEventListener("tick", stage);
-			}
-
-			//支援螢幕縮放
-			AdobeAn.makeResponsive(false, 'both', false, 1, [canvas, anim_container, dom_overlay_container]);
-			AdobeAn
-				.compositionLoaded(lib.properties.id);
-			fnStartAnimation();
-		}
-	</script>
-	<!-- 引用jquery -->
-	<script src="https://code.jquery.com/jquery-3.5.1.js"
-		integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
-</head>
-
-<body onload="init();" style="margin:0px;cursor: default;">
-	<!-- 將遊戲畫面包在div.container內，預設置中 -->
-	<div class="container">
-		<!-- 得分 -->
-		<h1 class="score">0</h1>
-		<!-- 血條 -->
-		<div class="hpBar">
-			<h2>HP</h2>
-			<div class="hpBox">
-				<div class="hp"></div>
-			</div>
-		</div>
-		<!-- 藍條 -->
-		<div class="mpBar">
-			<h2>MP</h2>
-			<div class="mpBox">
-				<div class="mp"></div>
-			</div>
-		</div>
-		<!-- boss血條 -->
-		<div class="boss_hpBar">
-			<div class="boss_hpBox">
-				<div class="boss_hp"></div>
-			</div>
-		</div>
-		<!-- 遊戲音量 -->
-		<div id="volume">
-			<img src="./img/S0.6.png" style="position: absolute; left: 100%;top: 2%;width: 8%;cursor: pointer;" id="V">
-		</div>
-		<!-- 重新載入 -->
-		<div id="again">
-			<img src="./img/AGAIN.png"
-				style="position: absolute; left: 120%;top: 2.5%;width: 6%;cursor: pointer;opacity: 0.8;">
-		</div>
-		<!-- 遊戲暫停 -->
-		<div id="pause">
-			<img src="./img/PAUSE.png"
-				style="position: absolute; left: 110%;top:2.5%;width: 6%;cursor: pointer;opacity: 0.8;" id="P">
-		</div>
-		<!-- 遊戲開始 -->
-		<div id="start"><img src="./img/START.gif"></div>
-		<!-- 遊戲失敗 -->
-		<div id="game_over"><img src="./img/GAME_OVER.png"></div>
-		<!-- 再玩一次 -->
-		<div id="restart"><img src="./img/RESTART.png"></div>
-		<!-- 遊戲勝利 -->
-		<div id="win_game"><img src="./img/WIN_GAME.jpg"></div>
-		<!-- canvas 遊戲畫布 -->
-		<div id="animation_container" style="background-color:rgba(255, 255, 255, 1.00); width:1024px; height:768px">
-			<canvas id="canvas" width="1024" height="768"
-				style="position: absolute; display: block; background-color:rgba(255, 255, 255, 1.00);z-index: 1;"></canvas>
-			<div id="dom_overlay_container"
-				style="pointer-events:none; overflow:hidden; width:1024px; height:768px; position: absolute; left: 0px; top: 0px; display: block;">
-			</div>
-		</div>
-		<!-- 遊戲說明 -->
-		<div id="intro">
-			<img src="./img/遊戲說明.jpg" style="width: 100%;">
-		</div>
-		<!-- 遊戲版權&關於作者 -->
-		<div>
-			<footer>
-				copyright &copy; Jim space_war
-				<h1>(2020前端程式設計)</h1>
-				<a href="https://b06608062.github.io/" id="about_me" target="_blank">About_me</a>
-			</footer>
-		</div>
-	</div>
-</body>
-
+  <body onload="init();" style="margin: 0px; cursor: default">
+    <!-- 將遊戲畫面包在div.container內，預設置中 -->
+    <div class="container">
+      <!-- 得分 -->
+      <h1 class="score">0</h1>
+      <!-- 血條 -->
+      <div class="hpBar">
+        <h2>HP</h2>
+        <div class="hpBox">
+          <div class="hp"></div>
+        </div>
+      </div>
+      <!-- 藍條 -->
+      <div class="mpBar">
+        <h2>MP</h2>
+        <div class="mpBox">
+          <div class="mp"></div>
+        </div>
+      </div>
+      <!-- boss血條 -->
+      <div class="boss_hpBar">
+        <div class="boss_hpBox">
+          <div class="boss_hp"></div>
+        </div>
+      </div>
+      <!-- 遊戲音量 -->
+      <div id="volume">
+        <img
+          src="./img/S0.6.png"
+          style="
+            position: absolute;
+            left: 100%;
+            top: 2%;
+            width: 8%;
+            cursor: pointer;
+          "
+          id="V"
+        />
+      </div>
+      <!-- 重新載入 -->
+      <!-- <div id="again">
+        <img
+          src="./img/AGAIN.png"
+          style="
+            position: absolute;
+            left: 120%;
+            top: 2.5%;
+            width: 6%;
+            cursor: pointer;
+            opacity: 0.8;
+          "
+        />
+      </div> -->
+      <!-- 遊戲暫停 -->
+      <div id="pause">
+        <img
+          src="./img/PAUSE.png"
+          style="
+            position: absolute;
+            left: 110%;
+            top: 2.5%;
+            width: 6%;
+            cursor: pointer;
+            opacity: 0.8;
+          "
+          id="P"
+        />
+      </div>
+      <!-- 遊戲開始 -->
+      <div id="start"><img src="./img/START.gif" /></div>
+      <!-- 遊戲失敗 -->
+      <div id="game_over"><img src="./img/GAME_OVER.png" /></div>
+      <!-- 再玩一次 -->
+      <div id="restart"><img src="./img/RESTART.png" /></div>
+      <!-- 遊戲勝利 -->
+      <div id="win_game"><img src="./img/WIN_GAME.jpg" /></div>
+      <!-- canvas 遊戲畫布 -->
+      <div
+        id="animation_container"
+        style="
+          background-color: rgba(255, 255, 255, 1);
+          width: 1024px;
+          height: 768px;
+        "
+      >
+        <canvas
+          id="canvas"
+          width="1024"
+          height="768"
+          style="
+            position: absolute;
+            display: block;
+            background-color: rgba(255, 255, 255, 1);
+            z-index: 1;
+          "
+        ></canvas>
+        <div
+          id="dom_overlay_container"
+          style="
+            pointer-events: none;
+            overflow: hidden;
+            width: 1024px;
+            height: 768px;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            display: block;
+          "
+        ></div>
+      </div>
+      <!-- 遊戲說明 -->
+      <div id="intro">
+        <img src="./img/遊戲說明.jpg" style="width: 100%" />
+      </div>
+      <!-- 遊戲版權&關於作者 -->
+      <div>
+        <footer>
+          copyright &copy; Jim space_war
+          <h1>(2020前端程式設計)</h1>
+          <a href="https://b06608062.github.io/" id="about_me" target="_blank"
+            >About_me</a
+          >
+        </footer>
+      </div>
+    </div>
+  </body>
 </html>
